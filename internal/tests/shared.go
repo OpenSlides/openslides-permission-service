@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 
@@ -166,7 +165,7 @@ func (t *TestDataProvider) Set(fqfield definitions.Fqfield, value definitions.Va
 }
 
 // Get does ...
-func (t TestDataProvider) Get(ctx context.Context, fqfields ...definitions.Fqfield) ([]json.RawMessage, error) {
+func (t TestDataProvider) Get(fqfields ...definitions.Fqfield) ([]json.RawMessage, error) {
 	data := make([]json.RawMessage, len(fqfields))
 	for i, field := range fqfields {
 		value, ok := t.Data[field]

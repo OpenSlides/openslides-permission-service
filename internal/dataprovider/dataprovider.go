@@ -1,7 +1,6 @@
 package dataprovider
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -13,7 +12,7 @@ import (
 // required by the permission service.
 type ExternalDataProvider interface {
 	// If a field does not exist, it is not returned.
-	Get(ctx context.Context, keys ...string) ([]json.RawMessage, error)
+	Get(keys ...string) ([]json.RawMessage, error)
 }
 
 // DataProvider is a wrapper around permission.ExternalDataProvider that
@@ -29,7 +28,7 @@ func NewDataProvider(externalDataprovider ExternalDataProvider) DataProvider {
 
 // GetString returns the value of a string field.
 func (dp DataProvider) GetString(fqfield definitions.Fqfield) (string, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +45,7 @@ func (dp DataProvider) GetString(fqfield definitions.Fqfield) (string, error) {
 //
 // If an error happens, an empty string is returned.
 func (dp DataProvider) GetStringWithDefault(fqfield definitions.Fqfield, defaultValue string) string {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return ""
 	}
@@ -59,7 +58,7 @@ func (dp DataProvider) GetStringWithDefault(fqfield definitions.Fqfield, default
 
 // GetStringArrayWithDefault returns a value, that conatins a list of strings.
 func (dp DataProvider) GetStringArrayWithDefault(fqfield definitions.Fqfield, defaultValue []string) ([]string, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +77,7 @@ func (dp DataProvider) GetStringArrayWithDefault(fqfield definitions.Fqfield, de
 
 // GetMany returns a list of values.
 func (dp DataProvider) GetMany(fqfields []definitions.Fqfield) map[definitions.Fqfield]definitions.Value {
-	result, err := dp.externalDataprovider.Get(context.TODO(), fqfields...)
+	result, err := dp.externalDataprovider.Get(fqfields...)
 	if err != nil {
 		panic("TODO: Please fix me:" + err.Error())
 	}
@@ -94,7 +93,7 @@ func (dp DataProvider) GetMany(fqfields []definitions.Fqfield) map[definitions.F
 //
 // If an error happens, it returns false.
 func (dp DataProvider) Exists(fqfield definitions.Fqfield) bool {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return false
 	}
@@ -104,7 +103,7 @@ func (dp DataProvider) Exists(fqfield definitions.Fqfield) bool {
 
 // GetInt returns an int value.
 func (dp DataProvider) GetInt(fqfield definitions.Fqfield) (int, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +122,7 @@ func (dp DataProvider) GetInt(fqfield definitions.Fqfield) (int, error) {
 
 // GetIntWithDefault returns a int value or the default value.
 func (dp DataProvider) GetIntWithDefault(fqfield definitions.Fqfield, defaultValue int) (int, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return 0, err
 	}
@@ -142,7 +141,7 @@ func (dp DataProvider) GetIntWithDefault(fqfield definitions.Fqfield, defaultVal
 
 // GetIntArray returns an array of ints.
 func (dp DataProvider) GetIntArray(fqfield definitions.Fqfield) ([]int, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +159,7 @@ func (dp DataProvider) GetIntArray(fqfield definitions.Fqfield) ([]int, error) {
 
 // GetIntArrayWithDefault returns an int array or the default value.
 func (dp DataProvider) GetIntArrayWithDefault(fqfield definitions.Fqfield, defaultValue []int) ([]int, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +177,7 @@ func (dp DataProvider) GetIntArrayWithDefault(fqfield definitions.Fqfield, defau
 
 // GetBoolWithDefault returns a bool value or the defaultValue.
 func (dp DataProvider) GetBoolWithDefault(fqfield definitions.Fqfield, defaultValue bool) (bool, error) {
-	fields, err := dp.externalDataprovider.Get(context.TODO(), fqfield)
+	fields, err := dp.externalDataprovider.Get(fqfield)
 	if err != nil {
 		return false, err
 	}

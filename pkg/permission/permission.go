@@ -1,7 +1,6 @@
 package permission
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/core"
@@ -16,7 +15,7 @@ func New(dataprovider ExternalDataProvider) Permission {
 // required by the permission service.
 type ExternalDataProvider interface {
 	// If a field does not exist, it is not returned.
-	Get(ctx context.Context, keys ...string) ([]json.RawMessage, error)
+	Get(keys ...string) ([]json.RawMessage, error)
 }
 
 // Permission can tell, if a user has the permission for some data.

@@ -23,8 +23,8 @@ func NewPermissionService(externalDataprovider dataprovider.ExternalDataProvider
 // IsAllowed tells, if something is allowed.
 func (permissionService PermissionService) IsAllowed(name string, userID int, data definitions.FqfieldData) (bool, map[string]interface{}, error) {
 	if val, ok := Queries[name]; ok {
-		context := &allowed.IsAllowedParams{UserID: userID, Data: data, DataProvider: permissionService.dataprovider}
-		return val(context)
+		params := &allowed.IsAllowedParams{UserID: userID, Data: data, DataProvider: permissionService.dataprovider}
+		return val(params)
 	}
 
 	return false, nil, fmt.Errorf("no such query: \"%s\"", name)
