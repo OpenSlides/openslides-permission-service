@@ -100,9 +100,9 @@ func run() error {
 // time, the process is killed with statuscode 1.
 func waitForShutdown() {
 	sigint := make(chan os.Signal, 1)
-	// syscall.SIGTERM is not pressent on all plattforms. Since the autoupdate
-	// service is only run on linux, this is ok. If other plattforms should be
-	// supported, os.Interrupt should be used instead.
+	// syscall.SIGTERM is not pressent on all plattforms. Since the service is
+	// only run on linux, this is ok. If other plattforms should be supported,
+	// os.Interrupt should be used instead.
 	signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
 	<-sigint
 	go func() {
