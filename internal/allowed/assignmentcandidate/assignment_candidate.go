@@ -1,4 +1,4 @@
-package assignment_candidate
+package assignmentcandidate
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed"
@@ -14,6 +14,7 @@ var otherCreate = allowed.BuildCreateThroughID([]string{
 	"user_id",
 }, "assignment", "assignment_id", "assignments.can_nominate_other")
 
+// Create TODO
 func Create(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 	userID, err := allowed.GetID(params.Data, "user_id")
 	if err != nil {
@@ -22,16 +23,17 @@ func Create(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 
 	if userID == params.UserID {
 		return selfCreate(params)
-	} else {
-		return otherCreate(params)
 	}
+	return otherCreate(params)
 }
 
+// Sort TODO
 var Sort = allowed.BuildModifyThroughID([]string{
 	"assignment_id",
 	"candidate_ids",
 }, "assignment_candidate", "assignment", "assignment_id", "assignments.can_manage")
 
+// Delete TODO
 func Delete(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 	if err := allowed.ValidateFields(params.Data, allowed.MakeSet([]string{"id"})); err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func Delete(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	fqid := definitions.FqidFromCollectionAndId("assignment_candidate", id)
+	fqid := definitions.FqidFromCollectionAndID("assignment_candidate", id)
 	exists, err := allowed.DoesModelExists(fqid, params.DataProvider)
 	if err != nil {
 		return nil, err

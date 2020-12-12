@@ -40,7 +40,7 @@ func DoesUserExists(userID int, dp dataprovider.DataProvider) (bool, error) {
 		return true, nil
 	}
 
-	exists, err := DoesModelExists(definitions.FqidFromCollectionAndId("user", userID), dp)
+	exists, err := DoesModelExists(definitions.FqidFromCollectionAndID("user", userID), dp)
 	if err != nil {
 		err = fmt.Errorf("DoesUserExists: %w", err)
 	}
@@ -223,13 +223,13 @@ func (p *Permissions) HasAllPerms(permissions ...string) (bool, string) {
 }
 
 // GetID TODO
-func GetID(data definitions.FqfieldData, property definitions.Field) (definitions.Id, error) {
+func GetID(data definitions.FqfieldData, property definitions.Field) (definitions.ID, error) {
 	if val, ok := data[property]; ok {
 		var value int
 		if err := json.Unmarshal([]byte(val), &value); nil != err {
 			return 0, NotAllowedf("'%s' is not an int", property)
 		}
-		if err := definitions.IsValidId(value); err != nil {
+		if err := definitions.IsValidID(value); err != nil {
 			return 0, NotAllowed(err.Error())
 		}
 		return value, nil

@@ -77,7 +77,7 @@ func BuildCreate(allowedFields []string, permissions ...string) IsAllowed {
 		if err != nil {
 			return nil, err
 		}
-		exists, err := DoesModelExists(definitions.FqidFromCollectionAndId("meeting", meetingID), params.DataProvider)
+		exists, err := DoesModelExists(definitions.FqidFromCollectionAndID("meeting", meetingID), params.DataProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func BuildCreateThroughID(allowedFields []string, throughCollection definitions.
 		if err != nil {
 			return nil, err
 		}
-		exists, err := DoesModelExists(definitions.FqidFromCollectionAndId(throughCollection, throughID), params.DataProvider)
+		exists, err := DoesModelExists(definitions.FqidFromCollectionAndID(throughCollection, throughID), params.DataProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func BuildCreateThroughID(allowedFields []string, throughCollection definitions.
 			return nil, NotAllowedf("The %s with id %d (field %s) does not exist", throughCollection, throughID, throughField)
 		}
 
-		meetingID, err := GetMeetingIDFromModel(definitions.FqidFromCollectionAndId(throughCollection, throughID), params.DataProvider)
+		meetingID, err := GetMeetingIDFromModel(definitions.FqidFromCollectionAndID(throughCollection, throughID), params.DataProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +195,7 @@ func BuildModify(allowedFields []string, collection definitions.Collection, perm
 		if err != nil {
 			return nil, err
 		}
-		exists, err := DoesModelExists(definitions.FqidFromCollectionAndId(collection, id), params.DataProvider)
+		exists, err := DoesModelExists(definitions.FqidFromCollectionAndID(collection, id), params.DataProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +203,7 @@ func BuildModify(allowedFields []string, collection definitions.Collection, perm
 			return nil, NotAllowedf("The %s with id %d does not exist", collection, id)
 		}
 
-		meetingID, err := GetMeetingIDFromModel(definitions.FqidFromCollectionAndId(collection, id), params.DataProvider)
+		meetingID, err := GetMeetingIDFromModel(definitions.FqidFromCollectionAndID(collection, id), params.DataProvider)
 		if err != nil {
 			return nil, err
 		}
@@ -236,7 +236,7 @@ func BuildModifyThroughID(allowedFields []string, collection definitions.Collect
 		if err != nil {
 			return nil, err
 		}
-		throughFqid := definitions.FqidFromCollectionAndId(throughCollection, throughID)
+		throughFqid := definitions.FqidFromCollectionAndID(throughCollection, throughID)
 		exists, err := DoesModelExists(throughFqid, params.DataProvider)
 		if err != nil {
 			return nil, err
