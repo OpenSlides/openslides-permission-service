@@ -28,11 +28,8 @@ func TestDispatchNotFound(t *testing.T) {
 	core.Queries = Queries
 	p := core.NewPermissionService(nil)
 	_, err := p.IsAllowed(context.Background(), "", 0, nil)
-	var indexError interface {
-		Index() int
-	}
-	if !errors.As(err, &indexError) {
-		t.Errorf("Got error `%v`, expected an index error", err)
+	if err == nil {
+		t.Errorf("Got no error, expected one")
 	}
 }
 

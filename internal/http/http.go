@@ -59,7 +59,7 @@ func IsAllowed(mux *http.ServeMux, provider IsAlloweder) {
 			var indexError interface {
 				Index() int
 			}
-			errorIndex := -1
+			var errorIndex int
 			if errors.As(err, &indexError) {
 				errorIndex = indexError.Index()
 			}
