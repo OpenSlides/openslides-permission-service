@@ -21,7 +21,7 @@ FROM basis as testing
 
 RUN apk add build-base
 
-CMD go vet ./... && go test ./...
+CMD go vet ./... && && golint ./... && go test ./...
 
 
 # Development build.
