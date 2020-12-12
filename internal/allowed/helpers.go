@@ -47,6 +47,7 @@ func DoesUserExists(userID int, dp dataprovider.DataProvider) (bool, error) {
 	return exists, err
 }
 
+// DoesModelExists TODO
 func DoesModelExists(fqid definitions.Fqid, dp dataprovider.DataProvider) (bool, error) {
 	fqfield := definitions.FqfieldFromFqidAndField(fqid, "id")
 	exists, err := dp.Exists(fqfield)
@@ -82,7 +83,8 @@ func HasUserSuperadminRole(userID int, dp dataprovider.DataProvider) (bool, erro
 	return superadminRoleID == userRoleID, nil
 }
 
-func GetCommitteeIdFromMeeting(meetingID int, dp dataprovider.DataProvider) (int, error) {
+// GetCommitteeIDFromMeeting TODO
+func GetCommitteeIDFromMeeting(meetingID int, dp dataprovider.DataProvider) (int, error) {
 	committeeID, err := dp.GetInt("meeting/" + strconv.Itoa(meetingID) + "/committee_id")
 	if err != nil {
 		return 0, fmt.Errorf("GetCommitteeIdFromMeeting: %w", err)
@@ -90,6 +92,7 @@ func GetCommitteeIdFromMeeting(meetingID int, dp dataprovider.DataProvider) (int
 	return committeeID, nil
 }
 
+// IsUserCommitteeManager TODO
 func IsUserCommitteeManager(userID, committeeID int, dp dataprovider.DataProvider) (bool, error) {
 	// The anonymous is never a manager
 	if userID == 0 {
@@ -120,18 +123,18 @@ func CanUserSeeMeeting(userID, meetingID int, dp dataprovider.DataProvider) (boo
 			return false, fmt.Errorf("CanUserSeeMeeting: %w", err)
 		}
 		return enableAnonymous, nil
-	} else {
-		userIds, err := dp.GetIntArrayWithDefault("meeting/"+strconv.Itoa(meetingID)+"/user_ids", []int{})
-		if err != nil {
-			return false, fmt.Errorf("CanUserSeeMeeting: %w", err)
-		}
-		for _, id := range userIds {
-			if id == userID {
-				return true, nil
-			}
-		}
-		return false, nil
 	}
+	userIds, err := dp.GetIntArrayWithDefault("meeting/"+strconv.Itoa(meetingID)+"/user_ids", []int{})
+	if err != nil {
+		return false, fmt.Errorf("CanUserSeeMeeting: %w", err)
+	}
+	for _, id := range userIds {
+		if id == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+
 }
 
 // Permissions does ...
@@ -219,8 +222,8 @@ func (p *Permissions) HasAllPerms(permissions ...string) (bool, string) {
 	return true, ""
 }
 
-// GetInt does ...
-func GetId(data definitions.FqfieldData, property definitions.Field) (definitions.Id, error) {
+// GetID TODO
+func GetID(data definitions.FqfieldData, property definitions.Field) (definitions.Id, error) {
 	if val, ok := data[property]; ok {
 		var value int
 		if err := json.Unmarshal([]byte(val), &value); nil != err {
@@ -235,6 +238,7 @@ func GetId(data definitions.FqfieldData, property definitions.Field) (definition
 	return 0, NotAllowedf("'%s' is not in data", property)
 }
 
+// GetFqid TODO
 func GetFqid(data definitions.FqfieldData, property definitions.Field) (definitions.Fqid, error) {
 	if val, ok := data[property]; ok {
 		var value string

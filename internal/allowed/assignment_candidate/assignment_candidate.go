@@ -5,17 +5,17 @@ import (
 	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 )
 
-var selfCreate = allowed.BuildCreateThroughId([]string{
+var selfCreate = allowed.BuildCreateThroughID([]string{
 	"assignment_id",
 	"user_id",
 }, "assignment", "assignment_id", "assignments.can_nominate_self")
-var otherCreate = allowed.BuildCreateThroughId([]string{
+var otherCreate = allowed.BuildCreateThroughID([]string{
 	"assignment_id",
 	"user_id",
 }, "assignment", "assignment_id", "assignments.can_nominate_other")
 
 func Create(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
-	userID, err := allowed.GetId(params.Data, "user_id")
+	userID, err := allowed.GetID(params.Data, "user_id")
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func Create(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 	}
 }
 
-var Sort = allowed.BuildModifyThroughId([]string{
+var Sort = allowed.BuildModifyThroughID([]string{
 	"assignment_id",
 	"candidate_ids",
 }, "assignment_candidate", "assignment", "assignment_id", "assignments.can_manage")
@@ -45,7 +45,7 @@ func Delete(params *allowed.IsAllowedParams) (map[string]interface{}, error) {
 		return nil, nil
 	}
 
-	id, err := allowed.GetId(params.Data, "id")
+	id, err := allowed.GetID(params.Data, "id")
 	if err != nil {
 		return nil, err
 	}
