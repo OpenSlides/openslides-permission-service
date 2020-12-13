@@ -15,10 +15,11 @@ type Generic struct {
 	dp         dataprovider.DataProvider
 	collection string
 	managePerm string
+	readPerm   string
 }
 
 // CreateGeneric creates a generic collection.
-func CreateGeneric(dp dataprovider.DataProvider, collection string, managePerm string) *Generic {
+func CreateGeneric(dp dataprovider.DataProvider, collection string, readPerm, managePerm string) *Generic {
 	return &Generic{
 		dp:         dp,
 		collection: collection,
@@ -110,6 +111,29 @@ func (g *Generic) update(ctx context.Context, dp dataprovider.DataProvider, user
 		return 0, fmt.Errorf("getting meeting from model: %w", err)
 	}
 	return meetingID, nil
+}
+
+// RestrictFQFields tells, if the user has the permission to see the requested
+// fields.
+func (g *Generic) RestrictFQFields(ctx context.Context, userID int, fqfields []string, result map[string]bool) error {
+	if len(fqfields) == 0 {
+		return nil
+	}
+
+	parts := strings.Split(fqfields[0], "/")
+	meetingID, err := g.dp.MeetingFromModel(ctx, g.collection+"/"+parts[1])
+	if err != nil {
+		return fmt.Errorf("getting meeting from model: %w", err)
+	}
+
+	if err := EnsurePerms(ctx, g.dp, userID, meetingID, g.readPerm); err != nil {
+		return nil
+	}
+
+	for _, fqfield := range fqfields {
+		result[fqfield] = true
+	}
+	return nil
 }
 
 func meetingID(data map[string]json.RawMessage) (int, error) {

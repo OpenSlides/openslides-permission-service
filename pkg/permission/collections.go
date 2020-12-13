@@ -9,10 +9,10 @@ import (
 func openSlidesCollections(edp DataProvider) map[string]Collection {
 	dp := dataprovider.DataProvider{External: edp}
 	return map[string]Collection{
-		"agenda_item":          collection.CreateGeneric(dp, "agenda_item", "agenda.can_manage"), // TODO: assign, sort
-		"assignment":           collection.CreateGeneric(dp, "assignment", "assignments.can_manage"),
+		"agenda_item":          collection.CreateGeneric(dp, "agenda_item", "agenda.can_see", "agenda.can_manage"), // TODO: assign, sort
+		"assignment":           collection.CreateGeneric(dp, "assignment", "assignments.can_see", "assignments.can_manage"),
 		"assignment_candidate": assignment.NewCandidate(dp),
 
-		"topic": collection.CreateGeneric(dp, "topic", "agenda.can_manage"),
+		"topic": collection.CreateGeneric(dp, "topic", "agenda.can_see", "agenda.can_manage"),
 	}
 }

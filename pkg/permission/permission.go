@@ -53,14 +53,28 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 
 // RestrictFQFields does currently nothing.
 func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
-	restricted := make(map[definitions.Fqid]bool, len(fqfields))
-	for _, fqfield := range fqfields {
-		restricted[fqfield] = true
+	grouped := groupFQFields(fqfields)
+
+	data := make(map[definitions.Fqid]bool, len(fqfields))
+
+	for collection, fqfields := range grouped {
+		if err := ps.coll[collection].RestrictFQFields(ctx, userID, fqfields, data); err != nil {
+			return nil, fmt.Errorf("restrict for collection %s: %w", collection, err)
+		}
 	}
-	return restricted, nil
+	return data, nil
 }
 
 // AdditionalUpdate TODO
 func (ps *Permission) AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error) {
 	return []definitions.ID{}, nil
+}
+
+func groupFQFields(fqfields []string) map[string][]string {
+	grouped := make(map[string][]string)
+	for _, fqfield := range fqfields {
+		parts := strings.Split(fqfield, "/")
+		grouped[parts[0]] = append(grouped[parts[0]], fqfield)
+	}
+	return grouped
 }

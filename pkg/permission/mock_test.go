@@ -23,3 +23,14 @@ func (a allowedMock) IsAllowed(ctx context.Context, name string, userID int, dat
 	}
 	return nil, nil
 }
+
+func (a allowedMock) RestrictFQFields(ctx context.Context, userID int, fqfields []string, result map[string]bool) error {
+	if !a {
+		return nil
+	}
+
+	for _, fqfield := range fqfields {
+		result[fqfield] = true
+	}
+	return nil
+}
