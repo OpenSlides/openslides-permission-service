@@ -47,7 +47,7 @@ func run() error {
 	env := defaultEnv()
 
 	// Select ExternalDataProvider.
-	var edp permission.ExternalDataProvider
+	var edp permission.DataProvider
 	switch env["DATASTORE"] {
 	case "fake":
 		edp = fakeDataProvider{}

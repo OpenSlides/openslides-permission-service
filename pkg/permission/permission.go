@@ -1,32 +1,66 @@
+// Package permission provides tells, if a user has the permission to see or
+// write an object.
 package permission
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
-
-	"github.com/OpenSlides/openslides-permission-service/internal/core"
 )
 
+// Permission impelements the permission.Permission interface.
+type Permission struct {
+	coll map[string]Collection
+}
+
 // New returns a new permission service.
-func New(dataprovider ExternalDataProvider) Permission {
-	return core.NewPermissionService(dataprovider)
+func New(dp DataProvider, os ...Option) *Permission {
+	p := new(Permission)
+
+	for _, o := range os {
+		o(p)
+	}
+
+	if p.coll == nil {
+		p.coll = openSlidesCollections(dp)
+	}
+
+	return p
 }
 
-// ExternalDataProvider is the connection to the datastore. It returns the data
-// required by the permission service.
-type ExternalDataProvider interface {
-	// If a field does not exist, it is not returned.
-	Get(ctx context.Context, fqfields ...string) ([]json.RawMessage, error)
+// IsAllowed tells, if something is allowed.
+func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, dataList []definitions.FqfieldData) ([]definitions.Addition, error) {
+	collName := strings.SplitN(name, ".", 2)[0]
+	coll, ok := ps.coll[collName]
+	if !ok {
+		return nil, clientError{fmt.Sprintf("unknown collection: `%s`", collName)}
+	}
+
+	additions := make([]definitions.Addition, len(dataList))
+	for i, data := range dataList {
+		addition, err := coll.IsAllowed(ctx, name, userID, data)
+		if err != nil {
+			return nil, isAllowedError{name: name, index: i, err: err}
+		}
+
+		additions[i] = addition
+	}
+
+	return additions, nil
 }
 
-// Permission can tell, if a user has the permission for some data.
-//
-// See https://github.com/FinnStutzenstein/OpenSlides/blob/permissionService/docs/interfaces/permission-service.txt
-type Permission interface {
-	IsAllowed(ctx context.Context, name string, userID definitions.ID, dataList []definitions.FqfieldData) ([]definitions.Addition, error)
-	RestrictFQIDs(ctx context.Context, userID definitions.ID, fqids []definitions.Fqid) (map[definitions.Fqid]bool, error)
-	RestrictFQFields(ctx context.Context, userID definitions.ID, fqfields []definitions.Fqfield) (map[definitions.Fqfield]bool, error)
-	AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error)
+// RestrictFQFields does currently nothing.
+func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []definitions.Fqfield) (map[definitions.Fqfield]bool, error) {
+	r := make(map[definitions.Fqid]bool, len(fqfields))
+	for _, v := range fqfields {
+		r[v] = true
+	}
+	return r, nil
+}
+
+// AdditionalUpdate does ...
+func (ps *Permission) AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error) {
+	return []definitions.ID{}, nil
 }
