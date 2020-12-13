@@ -2,11 +2,17 @@ package permission
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/collection"
+	"github.com/OpenSlides/openslides-permission-service/internal/collection/assignment"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
 )
 
-func openSlidesCollections(dp DataProvider) map[string]Collection {
+func openSlidesCollections(edp DataProvider) map[string]Collection {
+	dp := dataprovider.DataProvider{External: edp}
 	return map[string]Collection{
-		"topic": collection.CreateGeneric(dataprovider.DataProvider{External: dp}, "topic", "agenda.can_manage"),
+		"agenda_item":          collection.CreateGeneric(dp, "agenda_item", "agenda.can_manage"), // TODO: assign, sort
+		"assignment":           collection.CreateGeneric(dp, "assignment", "assignments.can_manage"),
+		"assignment_candidate": assignment.NewCandidate(dp),
+
+		"topic": collection.CreateGeneric(dp, "topic", "agenda.can_manage"),
 	}
 }

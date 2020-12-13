@@ -2,8 +2,6 @@ package core
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed"
-	"github.com/OpenSlides/openslides-permission-service/internal/allowed/agenda"
-	"github.com/OpenSlides/openslides-permission-service/internal/allowed/assignment"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/assignmentcandidate"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/group"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/listofspeakers"
@@ -14,19 +12,10 @@ import (
 	motion_statute_paragraph "github.com/OpenSlides/openslides-permission-service/internal/allowed/motionstatuteparagraph"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/motionworkflow"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/tag"
-	"github.com/OpenSlides/openslides-permission-service/internal/allowed/topic"
 )
 
 // Queries is a list of all possible queries.
 var Queries = map[string]allowed.IsAllowed{
-	"agenda_item.update": agenda.Update,
-	"agenda_item.delete": agenda.Delete,
-	// TODO: create, assign, sort
-
-	"assignment.create": assignment.Create,
-	"assignment.update": assignment.Update,
-	"assignment.delete": assignment.Delete,
-
 	"assignment_candidate.create": assignmentcandidate.Create,
 	"assignment_candidate.sort":   assignmentcandidate.Sort,
 	"assignment_candidate.delete": assignmentcandidate.Delete,
@@ -89,10 +78,6 @@ var Queries = map[string]allowed.IsAllowed{
 	"tag.create": tag.Create,
 	"tag.update": tag.Update,
 	"tag.delete": tag.Delete,
-
-	"topic.create": topic.Create,
-	"topic.update": topic.Update,
-	"topic.delete": topic.Delete,
 
 	// TODO: users
 }

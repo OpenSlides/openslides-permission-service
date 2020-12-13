@@ -52,15 +52,15 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 }
 
 // RestrictFQFields does currently nothing.
-func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []definitions.Fqfield) (map[definitions.Fqfield]bool, error) {
-	r := make(map[definitions.Fqid]bool, len(fqfields))
-	for _, v := range fqfields {
-		r[v] = true
+func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
+	restricted := make(map[definitions.Fqid]bool, len(fqfields))
+	for _, fqfield := range fqfields {
+		restricted[fqfield] = true
 	}
-	return r, nil
+	return restricted, nil
 }
 
-// AdditionalUpdate does ...
+// AdditionalUpdate TODO
 func (ps *Permission) AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error) {
 	return []definitions.ID{}, nil
 }
