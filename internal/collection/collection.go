@@ -12,13 +12,13 @@ import (
 
 // Generic is a helper object to create a collection with usual functions.
 type Generic struct {
-	dp         dataprovider.ExternalDataProvider
+	dp         dataprovider.DataProvider
 	collection string
 	managePerm string
 }
 
 // CreateGeneric creates a generic collection.
-func CreateGeneric(dp dataprovider.ExternalDataProvider, collection string, managePerm string) *Generic {
+func CreateGeneric(dp dataprovider.DataProvider, collection string, managePerm string) *Generic {
 	return &Generic{
 		dp:         dp,
 		collection: collection,
@@ -28,9 +28,8 @@ func CreateGeneric(dp dataprovider.ExternalDataProvider, collection string, mana
 
 // IsAllowed impelements the permission.Collection interface.
 func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data map[string]json.RawMessage) (map[string]interface{}, error) {
-	dp := dataprovider.NewDataProvider(ctx, g.dp)
 
-	superUser, err := IsSuperuser(userID, dp)
+	superUser, err := IsSuperuser(ctx, userID, g.dp)
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +53,12 @@ func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data m
 	case "update":
 		fallthrough
 	case "delete":
-		meetingID, err = g.update(ctx, dp, userID, data)
+		meetingID, err = g.update(ctx, g.dp, userID, data)
 		if err != nil {
 			return nil, fmt.Errorf("getting meeting id for update action: %w", err)
 		}
 
-		meetingID, err = g.update(ctx, dp, userID, data)
+		meetingID, err = g.update(ctx, g.dp, userID, data)
 		if err != nil {
 			return nil, fmt.Errorf("getting meeting id for delete action: %w", err)
 		}
@@ -68,7 +67,7 @@ func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data m
 		return nil, fmt.Errorf("TODO unknown name")
 	}
 
-	exists, err := DoesModelExists("meeting/"+strconv.Itoa(meetingID), dp)
+	exists, err := DoesModelExists(ctx, "meeting/"+strconv.Itoa(meetingID), g.dp)
 	if err != nil {
 		return nil, fmt.Errorf("checking for meeting existing: %w", err)
 	}
@@ -77,7 +76,7 @@ func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data m
 		return nil, NotAllowedf("The meeting with id %d does not exist", meetingID)
 	}
 
-	if err := EnsurePerms(dp, userID, meetingID, g.managePerm); err != nil {
+	if err := EnsurePerms(ctx, g.dp, userID, meetingID, g.managePerm); err != nil {
 		return nil, fmt.Errorf("ensure manage permission: %w", err)
 	}
 
@@ -99,7 +98,7 @@ func (g *Generic) update(ctx context.Context, dp dataprovider.DataProvider, user
 		return 0, fmt.Errorf("getting model id: %w", err)
 	}
 
-	exists, err := DoesModelExists(fmt.Sprintf("%s/%d", g.collection, id), dp)
+	exists, err := DoesModelExists(ctx, fmt.Sprintf("%s/%d", g.collection, id), dp)
 	if err != nil {
 		return 0, fmt.Errorf("check that models does exist: %w", err)
 	}
@@ -107,7 +106,7 @@ func (g *Generic) update(ctx context.Context, dp dataprovider.DataProvider, user
 		return 0, NotAllowedf("The %s with id %d does not exist", g.collection, id)
 	}
 
-	meetingID, err := MeetingFromModel(fmt.Sprintf("%s/%d", g.collection, id), dp)
+	meetingID, err := MeetingFromModel(ctx, fmt.Sprintf("%s/%d", g.collection, id), dp)
 	if err != nil {
 		return 0, fmt.Errorf("getting meeting from model: %w", err)
 	}

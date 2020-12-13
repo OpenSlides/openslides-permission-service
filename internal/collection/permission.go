@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -15,52 +16,55 @@ type Permissions struct {
 }
 
 // Perms returns a Permissions object for an user in a meeting.
-func Perms(userID, meetingID int, dp dataprovider.DataProvider) (*Permissions, error) {
+func Perms(ctx context.Context, userID, meetingID int, dp dataprovider.DataProvider) (*Permissions, error) {
 	// Fetch user group ids for the meeting.
+	userGroupIDs := []int{}
 	userGroupIdsFqfield := "user/" + strconv.Itoa(userID) + "/group_$" + strconv.Itoa(meetingID) + "_ids"
-	userGroupIds, err := dp.GetIntArrayWithDefault(userGroupIdsFqfield, []int{})
-	if err != nil {
+	if err := dp.GetIfExist(ctx, userGroupIdsFqfield, &userGroupIDs); err != nil {
 		return nil, fmt.Errorf("get group ids: %w", err)
 	}
 
 	// Get superadmin_group_id.
-	superadminGroupID, err := dp.GetInt("meeting/" + strconv.Itoa(meetingID) + "/superadmin_group_id")
-	if err != nil {
+	var superadminGroupID int
+	fqfield := "meeting/" + strconv.Itoa(meetingID) + "/superadmin_group_id"
+	if err := dp.Get(ctx, fqfield, &superadminGroupID); err != nil {
 		return nil, fmt.Errorf("check for superadmin group: %w", err)
 	}
 
 	// Direct check: is the user a superadmin?
-	for _, id := range userGroupIds {
+	for _, id := range userGroupIDs {
 		if id == superadminGroupID {
-			return &Permissions{isSuperadmin: true, groupIds: userGroupIds, permissions: map[string]bool{}}, nil
+			return &Permissions{isSuperadmin: true, groupIds: userGroupIDs, permissions: map[string]bool{}}, nil
 		}
 	}
 
 	// Get default group id.
-	defaultGroupID, err := dp.GetInt("meeting/" + strconv.Itoa(meetingID) + "/default_group_id")
-	if err != nil {
+	var defaultGroupID int
+	fqfield = "meeting/" + strconv.Itoa(meetingID) + "/default_group_id"
+	if err := dp.Get(ctx, fqfield, &defaultGroupID); err != nil {
 		return nil, fmt.Errorf("getting default group: %w", err)
 	}
 
 	// Get group ids.
-	groupIds, err := dp.GetIntArray("meeting/" + strconv.Itoa(meetingID) + "/group_ids")
-	if err != nil {
+	var groupIDs []int
+	fqfield = "meeting/" + strconv.Itoa(meetingID) + "/group_ids"
+	if err := dp.Get(ctx, fqfield, &groupIDs); err != nil {
 		return nil, fmt.Errorf("getting group ids: %w", err)
 	}
 
 	// Fetch group permissions: A map from group id <-> permission array.
 	groupPermissions := make(map[int][]string)
-	for _, id := range groupIds {
+	for _, id := range groupIDs {
 		fqfield := "group/" + strconv.Itoa(id) + "/permissions"
-		singleGroupPermissions, err := dp.GetStringArrayWithDefault(fqfield, []string{})
-		if nil != err {
+		singleGroupPermissions := []string{}
+		if err := dp.GetIfExist(ctx, fqfield, &singleGroupPermissions); err != nil {
 			return nil, fmt.Errorf("getting %s: %w", fqfield, err)
 		}
 		groupPermissions[id] = singleGroupPermissions
 	}
 
 	// Collect perms for the user.
-	effectiveGroupIds := userGroupIds
+	effectiveGroupIds := userGroupIDs
 	if len(effectiveGroupIds) == 0 {
 		effectiveGroupIds = []int{defaultGroupID}
 	}
@@ -72,7 +76,7 @@ func Perms(userID, meetingID int, dp dataprovider.DataProvider) (*Permissions, e
 		}
 	}
 
-	return &Permissions{isSuperadmin: false, groupIds: userGroupIds, permissions: permissions}, nil
+	return &Permissions{isSuperadmin: false, groupIds: userGroupIDs, permissions: permissions}, nil
 }
 
 // HasOne returns true, if the permission object contains at least one of the given permissions.
