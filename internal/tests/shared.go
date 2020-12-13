@@ -42,7 +42,7 @@ func NewTestDataProvider(ctx context.Context) *TestDataProvider {
 
 // GetDataprovider does ...
 func (t *TestDataProvider) GetDataprovider() dataprovider.DataProvider {
-	return dataprovider.NewDataProvider(t.ctx, t)
+	return dataprovider.DataProvider{External: t}
 }
 
 // SetDefault does ....

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 )
@@ -45,7 +46,7 @@ func (dp *DataProvider) Get(ctx context.Context, fqfield string, value interface
 
 // GetIfExist behaves like Get() but does not throw an error if the fqfield does
 // not exist.
-func (dp DataProvider) GetIfExist(ctx context.Context, fqfield string, value interface{}) error {
+func (dp *DataProvider) GetIfExist(ctx context.Context, fqfield string, value interface{}) error {
 	if err := dp.Get(ctx, fqfield, value); err != nil {
 		var errDoesNotExist doesNotExistError
 		if !errors.As(err, &errDoesNotExist) {
@@ -58,11 +59,145 @@ func (dp DataProvider) GetIfExist(ctx context.Context, fqfield string, value int
 // Exists tells, if a fqfield exist.
 //
 // If an error happens, it returns false.
-func (dp DataProvider) Exists(ctx context.Context, fqfield string) (bool, error) {
+func (dp *DataProvider) Exists(ctx context.Context, fqfield string) (bool, error) {
 	fields, err := dp.externalGet(ctx, fqfield)
 	if err != nil {
 		return false, fmt.Errorf("getting fqfield: %w", err)
 	}
 
 	return fields[0] != nil, nil
+}
+
+// IsSuperuser returns true, if the user is a superuser. If the user does not
+// exist at all, an error is returned.
+func (dp *DataProvider) IsSuperuser(ctx context.Context, userID int) (bool, error) {
+	exists, err := dp.DoesUserExists(ctx, userID)
+	if err != nil {
+		return false, fmt.Errorf("check if user exist: %w", err)
+	}
+	if !exists {
+		return false, doesNotExistError(fmt.Sprintf("user with id %d does not exist", userID))
+	}
+
+	superadmin, err := dp.HasUserSuperadminRole(ctx, userID)
+	if err != nil {
+		return false, fmt.Errorf("check for super user role: %w", err)
+	}
+	return superadmin, nil
+}
+
+// DoesUserExists returns true, if an user exist. Returns allways true for
+// userID 0.
+func (dp *DataProvider) DoesUserExists(ctx context.Context, userID int) (bool, error) {
+	if userID == 0 {
+		return true, nil
+	}
+
+	exists, err := dp.DoesModelExists(ctx, "user/"+strconv.Itoa(userID))
+	if err != nil {
+		return false, fmt.Errorf("lockup user: %w", err)
+	}
+	return exists, nil
+}
+
+// DoesModelExists returns true, if an object exists in the datastore.
+func (dp *DataProvider) DoesModelExists(ctx context.Context, fqid string) (bool, error) {
+	exists, err := dp.Exists(ctx, fqid+"/"+"id")
+	if err != nil {
+		return false, fmt.Errorf("checking for model existing: %w", err)
+	}
+	return exists, nil
+}
+
+// HasUserSuperadminRole returns true, if the user is in the superuser group.
+func (dp *DataProvider) HasUserSuperadminRole(ctx context.Context, userID int) (bool, error) {
+	// The anonymous is never a superadmin.
+	if userID == 0 {
+		return false, nil
+	}
+
+	// Get superadmin role id.
+	var superadminRoleID int
+	if err := dp.Get(ctx, "organisation/1/superadmin_role_id", &superadminRoleID); err != nil {
+		return false, fmt.Errorf("getting superadmin role id: %w", err)
+	}
+
+	// Get users role id.
+	fqfield := "user/" + strconv.Itoa(userID) + "/role_id"
+	if exists, err := dp.Exists(ctx, fqfield); !exists || err != nil {
+		// The user has no role.
+		return false, err
+	}
+
+	var userRoleID int
+	if err := dp.Get(ctx, fqfield, &userRoleID); err != nil {
+		return false, fmt.Errorf("getting role_id: %w", err)
+	}
+
+	return superadminRoleID == userRoleID, nil
+}
+
+// CommitteeID returns the id of a committee from an meeting id.
+func (dp *DataProvider) CommitteeID(ctx context.Context, meetingID int) (int, error) {
+	var committeeID int
+	if err := dp.Get(ctx, "meeting/"+strconv.Itoa(meetingID)+"/committee_id", &committeeID); err != nil {
+		return 0, fmt.Errorf("getting committee id: %w", err)
+	}
+	return committeeID, nil
+}
+
+// IsManager returns true, if the user is a manager in the committee.
+func (dp *DataProvider) IsManager(ctx context.Context, userID, committeeID int) (bool, error) {
+	// The anonymous is never a manager.
+	if userID == 0 {
+		return false, nil
+	}
+
+	// Get committee manager_ids.
+	managerIDs := []int{}
+	fqfield := "committee/" + strconv.Itoa(committeeID) + "/manager_ids"
+	if err := dp.GetIfExist(ctx, fqfield, &managerIDs); err != nil {
+		return false, fmt.Errorf("getting committee ids: %w", err)
+	}
+
+	for _, id := range managerIDs {
+		if userID == id {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// InMeeting returns true, if the user is in the user_ids list or anonymous.
+func (dp *DataProvider) InMeeting(ctx context.Context, userID, meetingID int) (bool, error) {
+	if userID == 0 {
+		var enableAnonymous bool
+		fqfield := "meeting/" + strconv.Itoa(meetingID) + "/enable_anonymous"
+		if err := dp.GetIfExist(ctx, fqfield, &enableAnonymous); err != nil {
+			return false, fmt.Errorf("checking anonymous enabled: %w", err)
+		}
+		return enableAnonymous, nil
+	}
+
+	userIDs := []int{}
+	fqfield := "meeting/" + strconv.Itoa(meetingID) + "/user_ids"
+	if err := dp.GetIfExist(ctx, fqfield, &userIDs); err != nil {
+		return false, fmt.Errorf("getting meeting/user_ids: %w", err)
+	}
+
+	for _, id := range userIDs {
+		if id == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// MeetingFromModel returns the meeting id for an model.
+func (dp *DataProvider) MeetingFromModel(ctx context.Context, fqid string) (int, error) {
+	var id int
+	if err := dp.Get(ctx, fqid+"/meeting_id", &id); err != nil {
+		return 0, fmt.Errorf("getting meeting id: %w", err)
+	}
+	return id, nil
 }
