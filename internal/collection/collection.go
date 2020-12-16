@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
+	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // Generic is a helper object to create a collection with usual functions.
@@ -18,8 +19,8 @@ type Generic struct {
 	readPerm   string
 }
 
-// CreateGeneric creates a generic collection.
-func CreateGeneric(dp dataprovider.DataProvider, collection string, readPerm, managePerm string) *Generic {
+// NewGeneric creates a generic collection.
+func NewGeneric(dp dataprovider.DataProvider, collection string, readPerm, managePerm string) *Generic {
 	return &Generic{
 		dp:         dp,
 		collection: collection,
@@ -27,44 +28,29 @@ func CreateGeneric(dp dataprovider.DataProvider, collection string, readPerm, ma
 	}
 }
 
-// IsAllowed impelements the permission.Collection interface.
-func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data map[string]json.RawMessage) (map[string]interface{}, error) {
+// WriteHandler returns all generic handlers.
+func (g *Generic) WriteHandler() map[string]types.Writer {
+	return map[string]types.Writer{
+		g.collection + ".create": types.WriterFunc(g.create),
+		g.collection + ".update": types.WriterFunc(g.modify),
+		g.collection + ".delete": types.WriterFunc(g.modify),
+	}
+}
+
+// ReadHandler returns all generic handlers.
+func (g *Generic) ReadHandler() map[string]types.Reader {
+	return map[string]types.Reader{
+		g.collection: g,
+	}
+}
+
+func (g *Generic) check(ctx context.Context, meetingID int, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
 	superUser, err := g.dp.IsSuperuser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if superUser {
 		return nil, nil
-	}
-
-	nameParts := strings.Split(name, ".")
-	if len(nameParts) != 2 {
-		return nil, fmt.Errorf("TODO wrong name")
-	}
-
-	var meetingID int
-	switch nameParts[1] {
-	case "create":
-		meetingID, err = g.create(ctx, userID, data)
-		if err != nil {
-			return nil, fmt.Errorf("getting meeting id for create action: %w", err)
-		}
-
-	case "update":
-		fallthrough
-	case "delete":
-		meetingID, err = g.update(ctx, g.dp, userID, data)
-		if err != nil {
-			return nil, fmt.Errorf("getting meeting id for update action: %w", err)
-		}
-
-		meetingID, err = g.update(ctx, g.dp, userID, data)
-		if err != nil {
-			return nil, fmt.Errorf("getting meeting id for delete action: %w", err)
-		}
-
-	default:
-		return nil, fmt.Errorf("TODO unknown name")
 	}
 
 	exists, err := g.dp.DoesModelExists(ctx, "meeting/"+strconv.Itoa(meetingID))
@@ -79,38 +65,40 @@ func (g *Generic) IsAllowed(ctx context.Context, name string, userID int, data m
 	if err := EnsurePerms(ctx, g.dp, userID, meetingID, g.managePerm); err != nil {
 		return nil, fmt.Errorf("ensure manage permission: %w", err)
 	}
-
 	return nil, nil
 }
 
-func (g *Generic) create(ctx context.Context, userID int, data map[string]json.RawMessage) (int, error) {
-	meetingID, err := meetingID(data)
+func (g *Generic) create(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+	meetingID, err := mettingIDFromPayload(ctx, payload)
 	if err != nil {
-		return 0, fmt.Errorf("getting meetingID: %w", err)
+		return nil, fmt.Errorf("getting meeting id for create action: %w", err)
 	}
 
-	return meetingID, nil
+	return g.check(ctx, meetingID, userID, payload)
 }
 
-func (g *Generic) update(ctx context.Context, dp dataprovider.DataProvider, userID int, data map[string]json.RawMessage) (int, error) {
-	id, err := modelID(data)
+func (g *Generic) modify(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+	id, err := modelID(payload)
 	if err != nil {
-		return 0, fmt.Errorf("getting model id: %w", err)
+		return nil, fmt.Errorf("getting model id from payload: %w", err)
 	}
 
-	exists, err := dp.DoesModelExists(ctx, fmt.Sprintf("%s/%d", g.collection, id))
+	fqid := fmt.Sprintf("%s/%d", g.collection, id)
+	meetingID, err := g.dp.MeetingFromModel(ctx, fqid)
 	if err != nil {
-		return 0, fmt.Errorf("check that models does exist: %w", err)
-	}
-	if !exists {
-		return 0, NotAllowedf("The %s with id %d does not exist", g.collection, id)
+		return nil, fmt.Errorf("getting meeting id for model %s: %w", fqid, err)
 	}
 
-	meetingID, err := dp.MeetingFromModel(ctx, fmt.Sprintf("%s/%d", g.collection, id))
-	if err != nil {
-		return 0, fmt.Errorf("getting meeting from model: %w", err)
+	return g.check(ctx, meetingID, userID, payload)
+}
+
+func mettingIDFromPayload(ctx context.Context, payload map[string]json.RawMessage) (int, error) {
+	var id int
+	if err := json.Unmarshal(payload["meeting_id"], &id); err != nil {
+		return 0, fmt.Errorf("no valid meeting id: %w", err)
 	}
-	return meetingID, nil
+
+	return id, nil
 }
 
 // RestrictFQFields tells, if the user has the permission to see the requested
@@ -134,14 +122,6 @@ func (g *Generic) RestrictFQFields(ctx context.Context, userID int, fqfields []s
 		result[fqfield] = true
 	}
 	return nil
-}
-
-func meetingID(data map[string]json.RawMessage) (int, error) {
-	var id int
-	if err := json.Unmarshal(data["meeting_id"], &id); err != nil {
-		return 0, fmt.Errorf("no valid meeting id: %w", err)
-	}
-	return id, nil
 }
 
 func modelID(data map[string]json.RawMessage) (int, error) {

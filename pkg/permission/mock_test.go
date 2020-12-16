@@ -5,19 +5,34 @@ import (
 	"encoding/json"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed"
+	"github.com/OpenSlides/openslides-permission-service/internal/types"
 	"github.com/OpenSlides/openslides-permission-service/pkg/permission"
 )
 
-func fakeCollections() map[string]permission.Collection {
-	return map[string]permission.Collection{
+func fakeCollections() []permission.Collection {
+	return []permission.Collection{
+		collectionMock{},
+	}
+}
+
+type collectionMock struct{}
+
+func (c collectionMock) WriteHandler() map[string]types.Writer {
+	return map[string]types.Writer{
 		"dummy_allowed":     allowedMock(true),
 		"dummy_not_allowed": allowedMock(false),
 	}
 }
 
+func (c collectionMock) ReadHandler() map[string]types.Reader {
+	return map[string]types.Reader{
+		"dummy": allowedMock(false),
+	}
+}
+
 type allowedMock bool
 
-func (a allowedMock) IsAllowed(ctx context.Context, name string, userID int, data map[string]json.RawMessage) (map[string]interface{}, error) {
+func (a allowedMock) IsAllowed(ctx context.Context, userID int, data map[string]json.RawMessage) (map[string]interface{}, error) {
 	if !a {
 		return nil, allowed.NotAllowed("Some reason here")
 	}

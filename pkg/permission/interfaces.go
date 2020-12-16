@@ -3,6 +3,8 @@ package permission
 import (
 	"context"
 	"encoding/json"
+
+	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // DataProvider is the connection to the datastore. It returns the data
@@ -14,6 +16,6 @@ type DataProvider interface {
 
 // Collection represents one OpenSlides object like a motion or a User.
 type Collection interface {
-	IsAllowed(ctx context.Context, name string, userID int, data map[string]json.RawMessage) (map[string]interface{}, error)
-	RestrictFQFields(ctx context.Context, userID int, fqfields []string, result map[string]bool) error
+	WriteHandler() map[string]types.Writer
+	ReadHandler() map[string]types.Reader
 }

@@ -8,11 +8,14 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
+	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // Permission impelements the permission.Permission interface.
 type Permission struct {
-	coll map[string]Collection
+	colls        []Collection
+	writeHandler map[string]types.Writer
+	readHandler  map[string]types.Reader
 }
 
 // New returns a new permission service.
@@ -23,8 +26,19 @@ func New(dp DataProvider, os ...Option) *Permission {
 		o(p)
 	}
 
-	if p.coll == nil {
-		p.coll = openSlidesCollections(dp)
+	if p.colls == nil {
+		p.colls = openSlidesCollections(dp)
+	}
+
+	p.writeHandler = make(map[string]types.Writer)
+	for _, coll := range p.colls {
+		for name, handler := range coll.WriteHandler() {
+			p.writeHandler[name] = handler
+		}
+
+		for name, handler := range coll.ReadHandler() {
+			p.readHandler[name] = handler
+		}
 	}
 
 	return p
@@ -32,15 +46,14 @@ func New(dp DataProvider, os ...Option) *Permission {
 
 // IsAllowed tells, if something is allowed.
 func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, dataList []definitions.FqfieldData) ([]definitions.Addition, error) {
-	collName := strings.SplitN(name, ".", 2)[0]
-	coll, ok := ps.coll[collName]
+	handler, ok := ps.writeHandler[name]
 	if !ok {
-		return nil, clientError{fmt.Sprintf("unknown collection: `%s`", collName)}
+		return nil, clientError{fmt.Sprintf("unknown collection: `%s`", name)}
 	}
 
 	additions := make([]definitions.Addition, len(dataList))
 	for i, data := range dataList {
-		addition, err := coll.IsAllowed(ctx, name, userID, data)
+		addition, err := handler.IsAllowed(ctx, userID, data)
 		if err != nil {
 			return nil, isAllowedError{name: name, index: i, err: err}
 		}
@@ -57,9 +70,14 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 
 	data := make(map[definitions.Fqid]bool, len(fqfields))
 
-	for collection, fqfields := range grouped {
-		if err := ps.coll[collection].RestrictFQFields(ctx, userID, fqfields, data); err != nil {
-			return nil, fmt.Errorf("restrict for collection %s: %w", collection, err)
+	for name, fqfields := range grouped {
+		handler, ok := ps.readHandler[name]
+		if !ok {
+			return nil, clientError{fmt.Sprintf("unknown collection: `%s`", name)}
+		}
+
+		if err := handler.RestrictFQFields(ctx, userID, fqfields, data); err != nil {
+			return nil, fmt.Errorf("restrict for collection %s: %w", name, err)
 		}
 	}
 	return data, nil
