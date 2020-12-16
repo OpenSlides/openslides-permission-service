@@ -53,6 +53,7 @@ func (g *Generic) check(ctx context.Context, meetingID int, userID int, payload 
 		return nil, nil
 	}
 
+	// TODO @Norman: Muss ich kontrollieren ,dass das meeting existiert?
 	exists, err := g.dp.DoesModelExists(ctx, "meeting/"+strconv.Itoa(meetingID))
 	if err != nil {
 		return nil, fmt.Errorf("checking for meeting existing: %w", err)

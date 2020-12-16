@@ -3,7 +3,6 @@ package tests
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
@@ -29,13 +28,12 @@ func addStringToJSONArray(arrayJSON definitions.Value, value string) definitions
 
 // TestDataProvider does ...
 type TestDataProvider struct {
-	ctx  context.Context
 	Data definitions.FqfieldData
 }
 
 // NewTestDataProvider does ...
-func NewTestDataProvider(ctx context.Context) *TestDataProvider {
-	var testDataProvider = &TestDataProvider{ctx, nil}
+func NewTestDataProvider() *TestDataProvider {
+	var testDataProvider = &TestDataProvider{nil}
 	testDataProvider.SetDefault()
 	return testDataProvider
 }
@@ -197,10 +195,6 @@ func (t *TestDataProvider) Set(fqfield definitions.Fqfield, value string) {
 
 // Get does ...
 func (t TestDataProvider) Get(ctx context.Context, fqfields ...definitions.Fqfield) ([]json.RawMessage, error) {
-	if ctx != t.ctx {
-		return nil, fmt.Errorf("the context was not propagated")
-	}
-
 	data := make([]json.RawMessage, len(fqfields))
 	for i, field := range fqfields {
 		value, ok := t.Data[field]
