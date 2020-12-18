@@ -7,7 +7,6 @@ import (
 
 	"github.com/OpenSlides/openslides-permission-service/internal/collection/assignment"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
-	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 	"github.com/OpenSlides/openslides-permission-service/internal/tests"
 )
 
@@ -34,7 +33,7 @@ func TestCreate(t *testing.T) {
 	t.Run("ValidPermissionOther", func(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment", 1)
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"assignment_id": []byte("1"),
 			"user_id":       []byte("2"),
 		}
@@ -53,7 +52,7 @@ func TestCreate(t *testing.T) {
 	t.Run("InvalidPermissionSelf", func(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment", 1)
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"assignment_id": []byte("1"),
 			"user_id":       []byte("1"),
 		}
@@ -72,7 +71,7 @@ func TestCreate(t *testing.T) {
 	t.Run("InvalidPermissionOther", func(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment", 1)
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"assignment_id": []byte("1"),
 			"user_id":       []byte("2"),
 		}
@@ -91,7 +90,7 @@ func TestCreate(t *testing.T) {
 	t.Run("NoUserId", func(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment", 1)
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"assignment_id": []byte("1"),
 		}
 		tdp.AddUserToMeeting(1, 1)
@@ -113,7 +112,7 @@ func TestDelete(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment_candidate", 1)
 		tdp.Set("assignment_candidate/1/user_id", "1")
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"id": []byte("1"),
 		}
 		tdp.AddUserToMeeting(1, 1)
@@ -132,7 +131,7 @@ func TestDelete(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment_candidate", 1)
 		tdp.Set("assignment_candidate/1/user_id", "2")
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"id": []byte("1"),
 		}
 		tdp.AddUserToMeeting(1, 1)
@@ -151,7 +150,7 @@ func TestDelete(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment_candidate", 1)
 		tdp.Set("assignment_candidate/1/user_id", "1")
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"id": []byte("1"),
 		}
 		tdp.AddUserToMeeting(1, 1)
@@ -170,7 +169,7 @@ func TestDelete(t *testing.T) {
 		tdp := tests.NewTestDataProvider()
 		tdp.AddBasicModel("assignment_candidate", 1)
 		tdp.Set("assignment_candidate/1/user_id", "2")
-		payload := definitions.FqfieldData{
+		payload := map[string]json.RawMessage{
 			"id": []byte("1"),
 		}
 		tdp.AddUserToMeeting(1, 1)

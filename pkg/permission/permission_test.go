@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 	"github.com/OpenSlides/openslides-permission-service/pkg/permission"
 )
 
@@ -19,7 +18,7 @@ func TestDispatchNotFound(t *testing.T) {
 
 func TestDispatchAllowed(t *testing.T) {
 	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
-	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, []definitions.FqfieldData{nil})
+	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, nil)
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}
@@ -30,7 +29,7 @@ func TestDispatchAllowed(t *testing.T) {
 
 func TestDispatchNotAllowed(t *testing.T) {
 	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
-	_, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, []definitions.FqfieldData{nil})
+	_, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, nil)
 	var indexError interface {
 		Index() int
 	}
@@ -44,7 +43,7 @@ func TestDispatchNotAllowed(t *testing.T) {
 
 func TestDispatchEmptyDataAllowed(t *testing.T) {
 	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
-	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, []definitions.FqfieldData{})
+	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, nil)
 	if err != nil || len(additions) != 0 {
 		t.Errorf("Fail")
 	}
@@ -52,7 +51,7 @@ func TestDispatchEmptyDataAllowed(t *testing.T) {
 
 func TestDispatchEmptyDataNotAllowed(t *testing.T) {
 	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
-	additions, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, []definitions.FqfieldData{})
+	additions, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, nil)
 	if err != nil || len(additions) != 0 {
 		t.Errorf("Fail")
 	}

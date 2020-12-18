@@ -4,10 +4,10 @@ package permission
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
-	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
@@ -42,13 +42,13 @@ func New(dp DataProvider, os ...Option) *Permission {
 }
 
 // IsAllowed tells, if something is allowed.
-func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, dataList []definitions.FqfieldData) ([]definitions.Addition, error) {
+func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, dataList []map[string]json.RawMessage) ([]map[string]interface{}, error) {
 	handler, ok := ps.writeHandler[name]
 	if !ok {
 		return nil, clientError{fmt.Sprintf("unknown collection: `%s`", name)}
 	}
 
-	additions := make([]definitions.Addition, len(dataList))
+	additions := make([]map[string]interface{}, len(dataList))
 	for i, data := range dataList {
 		addition, err := handler.IsAllowed(ctx, userID, data)
 		if err != nil {
@@ -65,7 +65,7 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
 	grouped := groupFQFields(fqfields)
 
-	data := make(map[definitions.Fqid]bool, len(fqfields))
+	data := make(map[string]bool, len(fqfields))
 
 	for name, fqfields := range grouped {
 		handler, ok := ps.readHandler[name]
@@ -81,8 +81,8 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 }
 
 // AdditionalUpdate TODO
-func (ps *Permission) AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error) {
-	return []definitions.ID{}, nil
+func (ps *Permission) AdditionalUpdate(ctx context.Context, updated map[string]json.RawMessage) ([]int, error) {
+	return nil, nil
 }
 
 // RegisterReadHandler registers a reader.

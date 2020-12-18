@@ -6,13 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-
-	"github.com/OpenSlides/openslides-permission-service/internal/definitions"
 )
 
 type externalDataProvider interface {
 	// If a field does not exist, it is not returned.
-	Get(ctx context.Context, fields ...definitions.Fqfield) ([]json.RawMessage, error)
+	Get(ctx context.Context, fields ...string) ([]json.RawMessage, error)
 }
 
 // DataProvider is a wrapper around permission.DataProvider that provides some
@@ -21,7 +19,7 @@ type DataProvider struct {
 	External externalDataProvider
 }
 
-func (dp *DataProvider) externalGet(ctx context.Context, fields ...definitions.Fqfield) ([]json.RawMessage, error) {
+func (dp *DataProvider) externalGet(ctx context.Context, fields ...string) ([]json.RawMessage, error) {
 	return dp.External.Get(ctx, fields...)
 }
 
