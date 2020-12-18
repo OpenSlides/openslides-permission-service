@@ -33,7 +33,6 @@ func New(dp DataProvider, os ...Option) *Permission {
 		p.connecters = openSlidesCollections(dp)
 	}
 
-	p.writeHandler = make(map[string]collection.WriteChecker)
 	for _, con := range p.connecters {
 		con.Connect(p)
 	}

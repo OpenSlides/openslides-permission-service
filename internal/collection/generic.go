@@ -36,6 +36,10 @@ func (g *Generic) Connect(s HandlerStore) {
 	s.RegisterWriteHandler(g.collection+".update", Modify(g.dp, g.managePerm, g.collection))
 	s.RegisterWriteHandler(g.collection+".delete", Modify(g.dp, g.managePerm, g.collection))
 
+	for _, r := range g.manageRoutes {
+		s.RegisterWriteHandler(g.collection+"."+r, Modify(g.dp, g.managePerm, g.collection))
+	}
+
 	s.RegisterReadHandler(g.collection, Restrict(g.dp, g.readPerm, g.collection))
 }
 

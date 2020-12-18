@@ -17,7 +17,7 @@ func NewListOfSpeaker(dp dataprovider.DataProvider) *ListOfSpeaker {
 	}
 }
 
-// Connect connects the assignment_candidate routes.
+// Connect connects the list_of_speakers routes.
 func (l *ListOfSpeaker) Connect(s collection.HandlerStore) {
 	writePerm := "agenda.can_manage_list_of_speakers"
 	readPerm := "agenda.can_see"

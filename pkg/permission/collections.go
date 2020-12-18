@@ -19,14 +19,14 @@ func openSlidesCollections(edp DataProvider) []collection.Connecter {
 		assignment.NewCandidate(dp),
 
 		collection.NewGeneric(dp, "group", "users.can_see", "users.can_manage", collection.WithManageRoute(
-			"group.set_permission",
+			"set_permission",
 		)),
 
 		collection.NewGeneric(dp, "motion_block", "motion.can_see", "motion.can_manage"),
 		collection.NewGeneric(dp, "motion_category", "motion.can_see", "motion.can_manage", collection.WithManageRoute(
-			"motion_category.sort",
-			"motion_category.sort_motions_in_category",
-			"motion_category.number_motions",
+			"sort",
+			"sort_motions_in_category",
+			"number_motions",
 		)),
 		collection.NewGeneric(dp, "motion_change_recommendation", "motion.can_see", "motion.can_manage"),
 		collection.NewGeneric(dp, "motion_comment_section", "motion.can_see", "motion.can_manage"),
