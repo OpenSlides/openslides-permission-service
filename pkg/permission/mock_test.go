@@ -6,28 +6,21 @@ import (
 
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed"
 	"github.com/OpenSlides/openslides-permission-service/internal/types"
-	"github.com/OpenSlides/openslides-permission-service/pkg/permission"
 )
 
-func fakeCollections() []permission.Collection {
-	return []permission.Collection{
+func fakeCollections() []types.Connecter {
+	return []types.Connecter{
 		collectionMock{},
 	}
 }
 
 type collectionMock struct{}
 
-func (c collectionMock) WriteHandler() map[string]types.Writer {
-	return map[string]types.Writer{
-		"dummy_allowed":     allowedMock(true),
-		"dummy_not_allowed": allowedMock(false),
-	}
-}
+func (c collectionMock) Connect(s types.HandlerStore) {
+	s.RegisterWriteHandler("dummy_allowed", allowedMock(true))
+	s.RegisterWriteHandler("dummy_not_allowed", allowedMock(false))
 
-func (c collectionMock) ReadHandler() map[string]types.Reader {
-	return map[string]types.Reader{
-		"dummy": allowedMock(false),
-	}
+	s.RegisterReadHandler("dummy", allowedMock(false))
 }
 
 type allowedMock bool

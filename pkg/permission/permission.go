@@ -13,32 +13,29 @@ import (
 
 // Permission impelements the permission.Permission interface.
 type Permission struct {
-	colls        []Collection
+	connecters   []types.Connecter
 	writeHandler map[string]types.Writer
 	readHandler  map[string]types.Reader
 }
 
 // New returns a new permission service.
 func New(dp DataProvider, os ...Option) *Permission {
-	p := new(Permission)
+	p := &Permission{
+		writeHandler: make(map[string]types.Writer),
+		readHandler:  make(map[string]types.Reader),
+	}
 
 	for _, o := range os {
 		o(p)
 	}
 
-	if p.colls == nil {
-		p.colls = openSlidesCollections(dp)
+	if p.connecters == nil {
+		p.connecters = openSlidesCollections(dp)
 	}
 
 	p.writeHandler = make(map[string]types.Writer)
-	for _, coll := range p.colls {
-		for name, handler := range coll.WriteHandler() {
-			p.writeHandler[name] = handler
-		}
-
-		for name, handler := range coll.ReadHandler() {
-			p.readHandler[name] = handler
-		}
+	for _, con := range p.connecters {
+		con.Connect(p)
 	}
 
 	return p
@@ -64,7 +61,7 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 	return additions, nil
 }
 
-// RestrictFQFields does currently nothing.
+// RestrictFQFields tells, if the given user can see the fqfields.
 func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
 	grouped := groupFQFields(fqfields)
 
@@ -86,6 +83,16 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 // AdditionalUpdate TODO
 func (ps *Permission) AdditionalUpdate(ctx context.Context, updated definitions.FqfieldData) ([]definitions.ID, error) {
 	return []definitions.ID{}, nil
+}
+
+// RegisterReadHandler registers a reader.
+func (ps *Permission) RegisterReadHandler(name string, reader types.Reader) {
+	ps.readHandler[name] = reader
+}
+
+// RegisterWriteHandler registers a writer.
+func (ps *Permission) RegisterWriteHandler(name string, writer types.Writer) {
+	ps.writeHandler[name] = writer
 }
 
 func groupFQFields(fqfields []string) map[string][]string {

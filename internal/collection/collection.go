@@ -28,20 +28,13 @@ func NewGeneric(dp dataprovider.DataProvider, collection string, readPerm, manag
 	}
 }
 
-// WriteHandler returns all generic handlers.
-func (g *Generic) WriteHandler() map[string]types.Writer {
-	return map[string]types.Writer{
-		g.collection + ".create": types.WriterFunc(g.create),
-		g.collection + ".update": types.WriterFunc(g.modify),
-		g.collection + ".delete": types.WriterFunc(g.modify),
-	}
-}
+// Connect sets the generic routs to the given reader and writer.
+func (g *Generic) Connect(s types.HandlerStore) {
+	s.RegisterWriteHandler(g.collection+".create", types.WriterFunc(g.create))
+	s.RegisterWriteHandler(g.collection+".update", types.WriterFunc(g.modify))
+	s.RegisterWriteHandler(g.collection+".delete", types.WriterFunc(g.modify))
 
-// ReadHandler returns all generic handlers.
-func (g *Generic) ReadHandler() map[string]types.Reader {
-	return map[string]types.Reader{
-		g.collection: g,
-	}
+	s.RegisterReadHandler(g.collection, g)
 }
 
 func (g *Generic) check(ctx context.Context, meetingID int, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {

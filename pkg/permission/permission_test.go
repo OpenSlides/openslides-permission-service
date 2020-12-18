@@ -10,7 +10,7 @@ import (
 )
 
 func TestDispatchNotFound(t *testing.T) {
-	p := permission.New(nil, permission.WithCollections(fakeCollections()))
+	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
 	_, err := p.IsAllowed(context.Background(), "", 0, nil)
 	if err == nil {
 		t.Errorf("Got no error, expected one")
@@ -18,7 +18,7 @@ func TestDispatchNotFound(t *testing.T) {
 }
 
 func TestDispatchAllowed(t *testing.T) {
-	p := permission.New(nil, permission.WithCollections(fakeCollections()))
+	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
 	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, []definitions.FqfieldData{nil})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
@@ -29,7 +29,7 @@ func TestDispatchAllowed(t *testing.T) {
 }
 
 func TestDispatchNotAllowed(t *testing.T) {
-	p := permission.New(nil, permission.WithCollections(fakeCollections()))
+	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
 	_, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, []definitions.FqfieldData{nil})
 	var indexError interface {
 		Index() int
@@ -43,7 +43,7 @@ func TestDispatchNotAllowed(t *testing.T) {
 }
 
 func TestDispatchEmptyDataAllowed(t *testing.T) {
-	p := permission.New(nil, permission.WithCollections(fakeCollections()))
+	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
 	additions, err := p.IsAllowed(context.Background(), "dummy_allowed", 0, []definitions.FqfieldData{})
 	if err != nil || len(additions) != 0 {
 		t.Errorf("Fail")
@@ -51,7 +51,7 @@ func TestDispatchEmptyDataAllowed(t *testing.T) {
 }
 
 func TestDispatchEmptyDataNotAllowed(t *testing.T) {
-	p := permission.New(nil, permission.WithCollections(fakeCollections()))
+	p := permission.New(nil, permission.WithConnecters(fakeCollections()))
 	additions, err := p.IsAllowed(context.Background(), "dummy_not_allowed", 0, []definitions.FqfieldData{})
 	if err != nil || len(additions) != 0 {
 		t.Errorf("Fail")

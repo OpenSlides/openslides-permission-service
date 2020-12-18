@@ -33,3 +33,15 @@ type ReaderFunc func(ctx context.Context, userID int, fqfields []string, result 
 func (f ReaderFunc) RestrictFQFields(ctx context.Context, userID int, fqfields []string, result map[string]bool) error {
 	return f(ctx, userID, fqfields, result)
 }
+
+// Connecter can connect types.Reader and types.Writer to the permission
+// service.
+type Connecter interface {
+	Connect(store HandlerStore)
+}
+
+// HandlerStore can hold handlers for Readers and Writers.
+type HandlerStore interface {
+	RegisterReadHandler(name string, reader Reader)
+	RegisterWriteHandler(name string, writer Writer)
+}

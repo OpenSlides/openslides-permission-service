@@ -22,7 +22,9 @@ func TestCreate(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_self")
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.create"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.create"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err != nil {
 			t.Errorf("Got unexpected error: %v", err)
@@ -39,7 +41,9 @@ func TestCreate(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_other")
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.create"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.create"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err != nil {
 			t.Errorf("Got unexpected error: %v", err)
@@ -56,7 +60,9 @@ func TestCreate(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_other") // the wrong permission
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.create"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.create"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err == nil {
 			t.Errorf("Got no error, expected one")
@@ -73,7 +79,9 @@ func TestCreate(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_self") // the wrong permission
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.create"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.create"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err == nil {
 			t.Errorf("Got no error, expected one")
@@ -90,7 +98,9 @@ func TestCreate(t *testing.T) {
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_self")
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_other")
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.create"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.create"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err == nil {
 			t.Errorf("Got no error, expected one")
@@ -109,7 +119,9 @@ func TestDelete(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_self")
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.delete"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.delete"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err != nil {
 			t.Errorf("Got unexpected error: %v", err)
@@ -126,7 +138,9 @@ func TestDelete(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_other")
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.delete"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.delete"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err != nil {
 			t.Errorf("Got unexpected error: %v", err)
@@ -143,7 +157,9 @@ func TestDelete(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_other") // wrong permission
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.delete"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.delete"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err == nil {
 			t.Errorf("Got no error, expected one")
@@ -160,7 +176,9 @@ func TestDelete(t *testing.T) {
 		tdp.AddUserToMeeting(1, 1)
 		tdp.AddPermissionToGroup(1, "assignments.can_nominate_self") // wrong permission
 		dp := dataprovider.DataProvider{External: tdp}
-		handler := assignment.NewCandidate(dp).WriteHandler()["assignment_candidate.delete"]
+		permMock := new(tests.HandlerStoreMock)
+		assignment.NewCandidate(dp).Connect(permMock)
+		handler := permMock.WriteHandler["assignment_candidate.delete"]
 
 		if _, err := handler.IsAllowed(context.Background(), 1, payload); err == nil {
 			t.Errorf("Got no error, expected one")

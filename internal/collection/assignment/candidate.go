@@ -23,20 +23,13 @@ func NewCandidate(dp dataprovider.DataProvider) *Candidate {
 	}
 }
 
-// WriteHandler returns all routes for the backend.
-func (c *Candidate) WriteHandler() map[string]types.Writer {
-	return map[string]types.Writer{
-		"assignment_candidate.create": types.WriterFunc(c.create),
-		"assignment_candidate.sort":   types.WriterFunc(c.sort),
-		"assignment_candidate.delete": types.WriterFunc(c.delete),
-	}
-}
+// Connect connects the assignment_candidate routes.
+func (c *Candidate) Connect(s types.HandlerStore) {
+	s.RegisterWriteHandler("assignment_candidate.create", types.WriterFunc(c.create))
+	s.RegisterWriteHandler("assignment_candidate.sort", types.WriterFunc(c.sort))
+	s.RegisterWriteHandler("assignment_candidate.delete", types.WriterFunc(c.delete))
 
-// ReadHandler returns routes for the autoupdate-service.
-func (c *Candidate) ReadHandler() map[string]types.Reader {
-	return map[string]types.Reader{
-		"assignment_candidate": c,
-	}
+	s.RegisterReadHandler("assignment_candidate", c)
 }
 
 func (c *Candidate) create(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
