@@ -2,7 +2,8 @@ package collection
 
 import "fmt"
 
-// NotAllowedf TODO
+// NotAllowedf is an error that sends a message to the client that indicates,
+// that the user has not the required permissions.
 func NotAllowedf(format string, a ...interface{}) error {
 	return notAllowedError{fmt.Sprintf(format, a...)}
 }

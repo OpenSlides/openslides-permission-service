@@ -40,8 +40,6 @@ func (c *Candidate) create(ctx context.Context, userID int, payload map[string]j
 		return nil, nil
 	}
 
-	// TODO @Norman: Muss ich kontrollieren, dass das assignment existiert?
-
 	meetingID, err := c.dp.MeetingFromModel(ctx, "assignment/"+string(payload["assignment_id"]))
 	if err != nil {
 		return nil, fmt.Errorf("getting meeting id: %w", err)
@@ -72,8 +70,6 @@ func (c *Candidate) delete(ctx context.Context, userID int, payload map[string]j
 	if superUser {
 		return nil, nil
 	}
-
-	// TODO @Norman: Muss ich kontrollieren, dass das Candidate Objekt existiert?
 
 	fqid := "assignment_candidate/" + string(payload["id"])
 
@@ -132,7 +128,6 @@ func (c *Candidate) RestrictFQFields(ctx context.Context, userID int, fqfields [
 		return fmt.Errorf("getting meeting from assignment_candidate %s: %w", parts[1], err)
 	}
 
-	// TODO @Norman: Wann kann man einen assignment_candidate sehen?
 	if err := collection.EnsurePerms(ctx, c.dp, userID, meetingID, "assignment.can_see"); err != nil {
 		return nil
 	}
