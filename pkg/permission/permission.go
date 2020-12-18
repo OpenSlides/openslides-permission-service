@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/OpenSlides/openslides-permission-service/internal/types"
+	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 )
 
 // Permission impelements the permission.Permission interface.
 type Permission struct {
-	connecters   []types.Connecter
-	writeHandler map[string]types.Writer
-	readHandler  map[string]types.Reader
+	connecters   []collection.Connecter
+	writeHandler map[string]collection.WriteChecker
+	readHandler  map[string]collection.ReadeChecker
 }
 
 // New returns a new permission service.
 func New(dp DataProvider, os ...Option) *Permission {
 	p := &Permission{
-		writeHandler: make(map[string]types.Writer),
-		readHandler:  make(map[string]types.Reader),
+		writeHandler: make(map[string]collection.WriteChecker),
+		readHandler:  make(map[string]collection.ReadeChecker),
 	}
 
 	for _, o := range os {
@@ -33,7 +33,7 @@ func New(dp DataProvider, os ...Option) *Permission {
 		p.connecters = openSlidesCollections(dp)
 	}
 
-	p.writeHandler = make(map[string]types.Writer)
+	p.writeHandler = make(map[string]collection.WriteChecker)
 	for _, con := range p.connecters {
 		con.Connect(p)
 	}
@@ -86,12 +86,12 @@ func (ps *Permission) AdditionalUpdate(ctx context.Context, updated map[string]j
 }
 
 // RegisterReadHandler registers a reader.
-func (ps *Permission) RegisterReadHandler(name string, reader types.Reader) {
+func (ps *Permission) RegisterReadHandler(name string, reader collection.ReadeChecker) {
 	ps.readHandler[name] = reader
 }
 
 // RegisterWriteHandler registers a writer.
-func (ps *Permission) RegisterWriteHandler(name string, writer types.Writer) {
+func (ps *Permission) RegisterWriteHandler(name string, writer collection.WriteChecker) {
 	ps.writeHandler[name] = writer
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
-	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // Candidate is the collection for assignment candidates.
@@ -24,10 +23,10 @@ func NewCandidate(dp dataprovider.DataProvider) *Candidate {
 }
 
 // Connect connects the assignment_candidate routes.
-func (c *Candidate) Connect(s types.HandlerStore) {
-	s.RegisterWriteHandler("assignment_candidate.create", types.WriterFunc(c.create))
-	s.RegisterWriteHandler("assignment_candidate.sort", types.WriterFunc(c.sort))
-	s.RegisterWriteHandler("assignment_candidate.delete", types.WriterFunc(c.delete))
+func (c *Candidate) Connect(s collection.HandlerStore) {
+	s.RegisterWriteHandler("assignment_candidate.create", collection.WriteCheckerFunc(c.create))
+	s.RegisterWriteHandler("assignment_candidate.sort", collection.WriteCheckerFunc(c.sort))
+	s.RegisterWriteHandler("assignment_candidate.delete", collection.WriteCheckerFunc(c.delete))
 
 	s.RegisterReadHandler("assignment_candidate", c)
 }

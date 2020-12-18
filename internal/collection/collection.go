@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
-	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // Create checks for the mermission to create a new object.
-func Create(dp dataprovider.DataProvider, perm, collection string) types.Writer {
-	return types.WriterFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+func Create(dp dataprovider.DataProvider, perm, collection string) WriteChecker {
+	return WriteCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
 		meetingID, err := MettingIDFromPayload(ctx, payload)
 		if err != nil {
 			return nil, fmt.Errorf("getting meeting id for create action: %w", err)
@@ -23,8 +22,8 @@ func Create(dp dataprovider.DataProvider, perm, collection string) types.Writer 
 }
 
 // Modify checks for the permissions to alter an existing object.
-func Modify(dp dataprovider.DataProvider, perm, collection string) types.Writer {
-	return types.WriterFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+func Modify(dp dataprovider.DataProvider, perm, collection string) WriteChecker {
+	return WriteCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
 		id, err := modelID(payload)
 		if err != nil {
 			return nil, fmt.Errorf("getting model id from payload: %w", err)
@@ -77,8 +76,8 @@ func modelID(data map[string]json.RawMessage) (int, error) {
 
 // Restrict tells, if the user has the permission to see the requested
 // fields.
-func Restrict(dp dataprovider.DataProvider, perm, collection string) types.Reader {
-	return types.ReaderFunc(func(ctx context.Context, userID int, fqfields []string, result map[string]bool) error {
+func Restrict(dp dataprovider.DataProvider, perm, collection string) ReadeChecker {
+	return ReadeCheckerFunc(func(ctx context.Context, userID int, fqfields []string, result map[string]bool) error {
 		if len(fqfields) == 0 {
 			return nil
 		}

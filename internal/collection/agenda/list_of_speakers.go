@@ -3,7 +3,6 @@ package agenda
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
-	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
 
 // ListOfSpeaker is holds the permission logic for list of speakers.
@@ -19,7 +18,7 @@ func NewListOfSpeaker(dp dataprovider.DataProvider) *ListOfSpeaker {
 }
 
 // Connect connects the assignment_candidate routes.
-func (l *ListOfSpeaker) Connect(s types.HandlerStore) {
+func (l *ListOfSpeaker) Connect(s collection.HandlerStore) {
 	writePerm := "agenda.can_manage_list_of_speakers"
 	readPerm := "agenda.can_see"
 	col := "list_of_speakers"
