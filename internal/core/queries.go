@@ -2,8 +2,6 @@ package core
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed"
-	"github.com/OpenSlides/openslides-permission-service/internal/allowed/assignmentcandidate"
-	"github.com/OpenSlides/openslides-permission-service/internal/allowed/group"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/listofspeakers"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/motionblock"
 	"github.com/OpenSlides/openslides-permission-service/internal/allowed/motioncategory"
@@ -16,17 +14,8 @@ import (
 
 // Queries is a list of all possible queries.
 var Queries = map[string]allowed.IsAllowed{
-	"assignment_candidate.create": assignmentcandidate.Create,
-	"assignment_candidate.sort":   assignmentcandidate.Sort,
-	"assignment_candidate.delete": assignmentcandidate.Delete,
-
 	// TODO: assignment_poll
 	// TODO: committee
-
-	"group.create":         group.Create,
-	"group.update":         group.Update,
-	"group.delete":         group.Delete,
-	"group.set_permission": group.SetPermission,
 
 	"list_of_speakers.update":              listofspeakers.Update,
 	"list_of_speakers.delete_all_speakers": listofspeakers.DeleteAllSpeakers,

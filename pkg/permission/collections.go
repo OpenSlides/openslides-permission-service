@@ -3,6 +3,7 @@ package permission
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 	"github.com/OpenSlides/openslides-permission-service/internal/collection/assignment"
+	"github.com/OpenSlides/openslides-permission-service/internal/collection/group"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
 	"github.com/OpenSlides/openslides-permission-service/internal/types"
 )
@@ -16,5 +17,7 @@ func openSlidesCollections(edp DataProvider) []types.Connecter {
 		assignment.NewCandidate(dp),
 
 		collection.NewGeneric(dp, "topic", "agenda.can_see", "agenda.can_manage"),
+
+		group.NewGroup(dp),
 	}
 }
