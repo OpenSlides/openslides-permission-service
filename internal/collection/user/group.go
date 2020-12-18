@@ -1,4 +1,4 @@
-package group
+package user
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/collection"
@@ -23,5 +23,5 @@ func (g *Group) Connect(s types.HandlerStore) {
 	gen := collection.NewGeneric(g.dp, "group", "users.can_see", "users.can_manage")
 	gen.Connect(s)
 
-	s.RegisterWriteHandler("group.set_permission", types.WriterFunc(gen.Modify))
+	s.RegisterWriteHandler("group.set_permission", collection.Modify(g.dp, "users.can_manate", "group"))
 }
