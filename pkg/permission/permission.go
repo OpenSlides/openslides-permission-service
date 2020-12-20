@@ -86,11 +86,17 @@ func (ps *Permission) AdditionalUpdate(ctx context.Context, updated map[string]j
 
 // RegisterReadHandler registers a reader.
 func (ps *Permission) RegisterReadHandler(name string, reader collection.ReadeChecker) {
+	if _, ok := ps.readHandler[name]; ok {
+		panic(fmt.Sprintf("Read handler with name `%s` allready exists", name))
+	}
 	ps.readHandler[name] = reader
 }
 
 // RegisterWriteHandler registers a writer.
 func (ps *Permission) RegisterWriteHandler(name string, writer collection.WriteChecker) {
+	if _, ok := ps.writeHandler[name]; ok {
+		panic(fmt.Sprintf("Write handler with name `%s` allready exists", name))
+	}
 	ps.writeHandler[name] = writer
 }
 
@@ -101,4 +107,17 @@ func groupFQFields(fqfields []string) map[string][]string {
 		grouped[parts[0]] = append(grouped[parts[0]], fqfield)
 	}
 	return grouped
+}
+
+// AllRoutes returns the names of all read and write routes.
+func (ps *Permission) AllRoutes() (readRoutes []string, writeRoutes []string) {
+	rr := make([]string, 0, len(ps.readHandler))
+	for k := range ps.readHandler {
+		rr = append(rr, k)
+	}
+	wr := make([]string, 0, len(ps.writeHandler))
+	for k := range ps.writeHandler {
+		wr = append(wr, k)
+	}
+	return rr, wr
 }
