@@ -43,4 +43,26 @@ func TestPersonalNote(t *testing.T) {
 			t.Errorf("Expected an error")
 		}
 	})
+
+	delete := hs.WriteHandler["personal_note.delete"]
+
+	t.Run("delete own note", func(t *testing.T) {
+		payload := map[string]json.RawMessage{
+			"id": []byte("1"),
+		}
+
+		if _, err := delete.IsAllowed(context.Background(), 1, payload); err != nil {
+			t.Errorf("Got unexpected error %v", err)
+		}
+	})
+
+	t.Run("delete other note", func(t *testing.T) {
+		payload := map[string]json.RawMessage{
+			"id": []byte("1"),
+		}
+
+		if _, err := delete.IsAllowed(context.Background(), 2, payload); err == nil {
+			t.Errorf("Expected an error")
+		}
+	})
 }
