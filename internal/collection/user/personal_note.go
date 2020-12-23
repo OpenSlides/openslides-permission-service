@@ -23,6 +23,7 @@ func NewPersonalNote(dp dataprovider.DataProvider) *PersonalNote {
 
 // Connect creates the routes.
 func (p *PersonalNote) Connect(s collection.HandlerStore) {
+	s.RegisterWriteHandler("personal_note.create", collection.WriteCheckerFunc(p.create))
 	s.RegisterWriteHandler("personal_note.update", collection.WriteCheckerFunc(p.modify))
 	s.RegisterWriteHandler("personal_note.delete", collection.WriteCheckerFunc(p.modify))
 }
@@ -36,6 +37,13 @@ func (p PersonalNote) modify(ctx context.Context, userID int, payload map[string
 
 	if noteUserID != userID {
 		return nil, collection.NotAllowedf("Not your note")
+	}
+	return nil, nil
+}
+
+func (p PersonalNote) create(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+	if userID == 0 {
+		collection.NotAllowedf("Anonymous can not create personal notes.")
 	}
 	return nil, nil
 }
