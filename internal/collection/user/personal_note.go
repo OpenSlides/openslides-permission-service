@@ -26,6 +26,8 @@ func (p *PersonalNote) Connect(s collection.HandlerStore) {
 	s.RegisterWriteHandler("personal_note.create", collection.WriteCheckerFunc(p.create))
 	s.RegisterWriteHandler("personal_note.update", collection.WriteCheckerFunc(p.modify))
 	s.RegisterWriteHandler("personal_note.delete", collection.WriteCheckerFunc(p.modify))
+
+	s.RegisterReadHandler("personal_note", p)
 }
 
 func (p PersonalNote) modify(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
@@ -46,4 +48,26 @@ func (p PersonalNote) create(ctx context.Context, userID int, payload map[string
 		collection.NotAllowedf("Anonymous can not create personal notes.")
 	}
 	return nil, nil
+}
+
+// RestrictFQFields checks for read permissions.
+func (p PersonalNote) RestrictFQFields(ctx context.Context, userID int, fqfields []collection.FQField, result map[string]bool) error {
+	var noteUserID int
+	var lastID int
+	for _, fqfield := range fqfields {
+		if lastID != fqfield.ID {
+			f := fmt.Sprintf("personal_note/%d/user_id", fqfield.ID)
+			if err := p.dp.Get(ctx, f, &noteUserID); err != nil {
+				return fmt.Errorf("getting %s from datastore: %w", f, err)
+			}
+			lastID = fqfield.ID
+		}
+
+		if noteUserID != userID {
+			continue
+		}
+
+		result[fqfield.String()] = true
+	}
+	return nil
 }
