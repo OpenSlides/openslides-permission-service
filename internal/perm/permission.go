@@ -1,4 +1,4 @@
-package collection
+package perm
 
 //go:generate  sh -c "go run gen_derivate/main.go > derivate.go && go fmt derivate.go"
 

@@ -1,5 +1,5 @@
 // Code generated with autogen.gen DO NOT EDIT.
-package collection
+package perm
 
 var derivatePerms = map[string][]string{
 	"agenda.can_be_speaker":              {"agenda.can_see"},
@@ -14,7 +14,7 @@ var derivatePerms = map[string][]string{
 	"assignment.can_see":                 {},
 	"mediafile.can_manage":               {"mediafile.can_see"},
 	"mediafile.can_see":                  {},
-	"meeting.can_manage":                 {"meeting.can_manage_logos_and_fonts", "meeting.can_manage_projector", "meeting.can_see_projector", "meeting.can_see_history", "meeting.can_see_autopilot", "meeting.can_see_frontpage"},
+	"meeting.can_manage":                 {"meeting.can_see_history", "meeting.can_see_autopilot", "meeting.can_see_frontpage", "meeting.can_manage_logos_and_fonts", "meeting.can_manage_projector", "meeting.can_see_projector"},
 	"meeting.can_manage_logos_and_fonts": {},
 	"meeting.can_manage_projector":       {"meeting.can_see_projector"},
 	"meeting.can_see_autopilot":          {"meeting.can_see_frontpage"},
@@ -23,7 +23,7 @@ var derivatePerms = map[string][]string{
 	"meeting.can_see_projector":          {},
 	"motion.can_create":                  {"motion.can_see"},
 	"motion.can_create_amendments":       {"motion.can_see"},
-	"motion.can_manage":                  {"motion.can_manage_metadata", "motion.can_support", "motion.can_see", "motion.can_see_internal", "motion.can_see", "motion.can_create", "motion.can_see", "motion.can_create_amendments", "motion.can_see"},
+	"motion.can_manage":                  {"motion.can_see_internal", "motion.can_see", "motion.can_create", "motion.can_see", "motion.can_create_amendments", "motion.can_see", "motion.can_manage_metadata", "motion.can_support", "motion.can_see"},
 	"motion.can_manage_metadata":         {"motion.can_support", "motion.can_see"},
 	"motion.can_see":                     {},
 	"motion.can_see_internal":            {"motion.can_see"},

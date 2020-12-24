@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/OpenSlides/openslides-permission-service/internal/collection/assignment"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
+	"github.com/OpenSlides/openslides-permission-service/internal/perm/assignment"
 	"github.com/OpenSlides/openslides-permission-service/internal/tests"
 )
 

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
+	"github.com/OpenSlides/openslides-permission-service/internal/perm"
 )
 
 // Candidate is the collection for assignment candidates.
@@ -22,10 +22,10 @@ func NewCandidate(dp dataprovider.DataProvider) *Candidate {
 }
 
 // Connect connects the assignment_candidate routes.
-func (c *Candidate) Connect(s collection.HandlerStore) {
-	s.RegisterWriteHandler("assignment_candidate.create", collection.WriteCheckerFunc(c.create))
-	s.RegisterWriteHandler("assignment_candidate.sort", collection.WriteCheckerFunc(c.sort))
-	s.RegisterWriteHandler("assignment_candidate.delete", collection.WriteCheckerFunc(c.delete))
+func (c *Candidate) Connect(s perm.HandlerStore) {
+	s.RegisterWriteHandler("assignment_candidate.create", perm.WriteCheckerFunc(c.create))
+	s.RegisterWriteHandler("assignment_candidate.sort", perm.WriteCheckerFunc(c.sort))
+	s.RegisterWriteHandler("assignment_candidate.delete", perm.WriteCheckerFunc(c.delete))
 
 	s.RegisterReadHandler("assignment_candidate", c)
 }
@@ -49,12 +49,12 @@ func (c *Candidate) create(ctx context.Context, userID int, payload map[string]j
 		return nil, fmt.Errorf("no valid user id: %w", err)
 	}
 
-	perm := "assignments.can_nominate_other"
+	permission := "assignments.can_nominate_other"
 	if candidateUserID == userID {
-		perm = "assignments.can_nominate_self"
+		permission = "assignments.can_nominate_self"
 	}
 
-	if err := collection.EnsurePerms(ctx, c.dp, userID, meetingID, perm); err != nil {
+	if err := perm.EnsurePerms(ctx, c.dp, userID, meetingID, permission); err != nil {
 		return nil, fmt.Errorf("ensure create permission: %w", err)
 	}
 
@@ -77,9 +77,9 @@ func (c *Candidate) delete(ctx context.Context, userID int, payload map[string]j
 		return nil, fmt.Errorf("getting user id of candidate: %w", err)
 	}
 
-	perm := "assignments.can_nominate_other"
+	permission := "assignments.can_nominate_other"
 	if candidateUserID == userID {
-		perm = "assignments.can_nominate_self"
+		permission = "assignments.can_nominate_self"
 	}
 
 	meetingID, err := c.dp.MeetingFromModel(ctx, fqid)
@@ -87,7 +87,7 @@ func (c *Candidate) delete(ctx context.Context, userID int, payload map[string]j
 		return nil, fmt.Errorf("getting meeting id: %w", err)
 	}
 
-	if err := collection.EnsurePerms(ctx, c.dp, userID, meetingID, perm); err != nil {
+	if err := perm.EnsurePerms(ctx, c.dp, userID, meetingID, permission); err != nil {
 		return nil, fmt.Errorf("ensure delete permission: %w", err)
 	}
 
@@ -108,7 +108,7 @@ func (c *Candidate) sort(ctx context.Context, userID int, payload map[string]jso
 		return nil, fmt.Errorf("getting meeting id: %w", err)
 	}
 
-	if err := collection.EnsurePerms(ctx, c.dp, userID, meetingID, "assignments.can_manage"); err != nil {
+	if err := perm.EnsurePerms(ctx, c.dp, userID, meetingID, "assignments.can_manage"); err != nil {
 		return nil, fmt.Errorf("ensure delete permission: %w", err)
 	}
 
@@ -116,7 +116,7 @@ func (c *Candidate) sort(ctx context.Context, userID int, payload map[string]jso
 }
 
 // RestrictFQFields restricts all fields for assignment_candidates.
-func (c *Candidate) RestrictFQFields(ctx context.Context, userID int, fqfields []collection.FQField, result map[string]bool) error {
+func (c *Candidate) RestrictFQFields(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	if len(fqfields) == 0 {
 		return nil
 	}

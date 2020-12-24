@@ -1,4 +1,4 @@
-package collection
+package perm
 
 import (
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
