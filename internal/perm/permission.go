@@ -1,6 +1,6 @@
 package perm
 
-//go:generate  sh -c "go run gen_derivate/main.go > derivate.go && go fmt derivate.go"
+//go:generate  sh -c "go run build_derivate/main.go > derivate.go && go fmt derivate.go"
 
 import (
 	"context"

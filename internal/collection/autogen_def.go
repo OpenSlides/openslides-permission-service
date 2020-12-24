@@ -1,5 +1,5 @@
 // Code generated with autogen.gen DO NOT EDIT.
-package autogen
+package collection
 
 var autogenDef = map[string]string{
 	"agenda_item.assign":                       "agenda.can_manage",

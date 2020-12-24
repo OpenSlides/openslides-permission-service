@@ -1,6 +1,6 @@
-package autogen
+package collection
 
-//go:generate  sh -c "go run gen/main.go > def.go && go fmt def.go"
+//go:generate  sh -c "go run build_autogen_def/main.go > autogen_def.go && go fmt autogen_def.go"
 
 import (
 	"context"
