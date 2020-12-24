@@ -1,11 +1,10 @@
 package permission
 
 import (
+	"github.com/OpenSlides/openslides-permission-service/internal/collection"
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
 	"github.com/OpenSlides/openslides-permission-service/internal/perm"
-	"github.com/OpenSlides/openslides-permission-service/internal/perm/agenda"
 	"github.com/OpenSlides/openslides-permission-service/internal/perm/autogen"
-	"github.com/OpenSlides/openslides-permission-service/internal/perm/user"
 )
 
 func openSlidesCollections(edp DataProvider) []perm.Connecter {
@@ -14,8 +13,8 @@ func openSlidesCollections(edp DataProvider) []perm.Connecter {
 	return []perm.Connecter{
 		autogen.NewAutogen(dp),
 
-		agenda.NewSpeaker(dp),
-		user.NewPersonalNote(dp),
+		collection.NewSpeaker(dp),
+		collection.NewPersonalNote(dp),
 
 		//assignment.NewCandidate(dp),
 	}
