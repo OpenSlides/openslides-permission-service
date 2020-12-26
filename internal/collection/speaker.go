@@ -54,36 +54,17 @@ func (sp *Speaker) delete(ctx context.Context, userID int, payload map[string]js
 }
 
 func (sp *Speaker) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
-	var hasPerm bool
-	var lastID int
-	var err error
-	for _, fqfield := range fqfields {
-		if lastID != fqfield.ID {
-			hasPerm, err = sp.hasReadPerm(ctx, userID, fqfield)
-			if err != nil {
-				return fmt.Errorf("checking read perm for fqid %s: %w", fqfield, err)
-			}
+	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
+		fqid := fmt.Sprintf("speaker/%d", fqfield.ID)
+		meetingID, err := sp.dp.MeetingFromModel(ctx, fqid)
+		if err != nil {
+			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
-		if hasPerm {
-			result[fqfield.String()] = true
-		}
-	}
-	return nil
-}
 
-func (sp *Speaker) hasReadPerm(ctx context.Context, userID int, fqfield perm.FQField) (bool, error) {
-	fqid := fmt.Sprintf("speaker/%d", fqfield.ID)
-	meetingID, err := sp.dp.MeetingFromModel(ctx, fqid)
-	if err != nil {
-		return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
-	}
-
-	if err := perm.EnsurePerm(ctx, sp.dp, userID, meetingID, "agenda.can_see_list_of_speakers"); err != nil {
-		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, sp.dp, userID, meetingID, "my.perm"))
+		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, sp.dp, userID, meetingID, "agenda.can_see_list_of_speakers"))
 		if err != nil {
 			return false, fmt.Errorf("ensuring perm %w", err)
 		}
 		return allowed, nil
-	}
-	return true, nil
+	})
 }

@@ -220,3 +220,25 @@ func EnsurePerm(ctx context.Context, dp dataprovider.DataProvider, userID int, m
 
 	return nil
 }
+
+// AllFields checks all fqfields by the given function f.
+//
+// It asumes, that if a user can see one field of the object, he can see all
+// fields. So the check is only called once per fqid.
+func AllFields(fqfields []FQField, result map[string]bool, f func(FQField) (bool, error)) error {
+	var hasPerm bool
+	var lastID int
+	var err error
+	for _, fqfield := range fqfields {
+		if lastID != fqfield.ID {
+			hasPerm, err = f(fqfield)
+			if err != nil {
+				return fmt.Errorf("checking %s: %w", fqfield, err)
+			}
+		}
+		if hasPerm {
+			result[fqfield.String()] = true
+		}
+	}
+	return nil
+}
