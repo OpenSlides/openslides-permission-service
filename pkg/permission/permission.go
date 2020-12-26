@@ -52,7 +52,7 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 		addition, err := handler.IsAllowed(ctx, userID, data)
 		if err != nil {
 			var errNotAllowed perm.NotAllowedError
-			if errors.Is(err, &errNotAllowed) {
+			if errors.As(err, &errNotAllowed) {
 				return nil, indexError{name: name, index: i, err: err}
 			}
 			return nil, fmt.Errorf("action %d: %w", i, err)

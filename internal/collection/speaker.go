@@ -3,6 +3,7 @@ package collection
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
@@ -58,6 +59,10 @@ func (sp *Speaker) read(ctx context.Context, userID int, fqfields []perm.FQField
 		fqid := fmt.Sprintf("speaker/%d", fqfield.ID)
 		meetingID, err := sp.dp.MeetingFromModel(ctx, fqid)
 		if err != nil {
+			var errDoesNotExist dataprovider.DoesNotExistError
+			if errors.As(err, &errDoesNotExist) {
+				return false, nil
+			}
 			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
 
