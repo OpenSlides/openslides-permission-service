@@ -115,3 +115,87 @@ func TestMotionDelete(t *testing.T) {
 		}
 	})
 }
+
+func TestMotionCreate(t *testing.T) {
+	tdp := tests.NewTestDataProvider()
+	tdp.AddUserToMeeting(1, 1)
+
+	dp := dataprovider.DataProvider{External: tdp}
+	m := user.NewMotion(dp)
+	hs := new(tests.HandlerStoreMock)
+	m.Connect(hs)
+	create, ok := hs.WriteHandler["motion.create"]
+	if !ok {
+		t.Fatalf("Unknown handler `motion.create`")
+	}
+
+	t.Run("create simple fields without perm", func(t *testing.T) {
+		tdp.Set("group/1/permissions", "[]")
+		payload := map[string]json.RawMessage{
+			"meeting_id": []byte("1"),
+		}
+
+		_, err := create.IsAllowed(context.Background(), 1, payload)
+		assertNotAllowed(t, err)
+
+	})
+
+	t.Run("create simple fields with perm", func(t *testing.T) {
+		tdp.Set("group/1/permissions", `["motion.can_create"]`)
+		payload := map[string]json.RawMessage{
+			"meeting_id": []byte("1"),
+		}
+
+		if _, err := create.IsAllowed(context.Background(), 1, payload); err != nil {
+			t.Errorf("got unexpected error: %v", err)
+		}
+	})
+
+	t.Run("create amentment fields with wrong perm", func(t *testing.T) {
+		tdp.Set("group/1/permissions", `["motion.can_create"]`)
+		payload := map[string]json.RawMessage{
+			"meeting_id": []byte("1"),
+			"parent_id":  []byte("1"),
+		}
+
+		_, err := create.IsAllowed(context.Background(), 1, payload)
+		assertNotAllowed(t, err)
+
+	})
+
+	t.Run("create amentment fields with perm", func(t *testing.T) {
+		tdp.Set("group/1/permissions", `["motion.can_create_amendment"]`)
+		payload := map[string]json.RawMessage{
+			"meeting_id": []byte("1"),
+			"parent_id":  []byte("1"),
+		}
+
+		if _, err := create.IsAllowed(context.Background(), 1, payload); err != nil {
+			t.Errorf("got unexpected error: %v", err)
+		}
+	})
+
+	t.Run("create privileg fields with can_create", func(t *testing.T) {
+		tdp.Set("group/1/permissions", `["motion.can_create"]`)
+		payload := map[string]json.RawMessage{
+			"meeting_id":    []byte("1"),
+			"agenda_create": []byte("true"),
+		}
+
+		_, err := create.IsAllowed(context.Background(), 1, payload)
+		assertNotAllowed(t, err)
+
+	})
+
+	t.Run("create privileg fields with can_manage", func(t *testing.T) {
+		tdp.Set("group/1/permissions", `["motion.can_manage"]`)
+		payload := map[string]json.RawMessage{
+			"meeting_id":    []byte("1"),
+			"agenda_create": []byte("true"),
+		}
+
+		if _, err := create.IsAllowed(context.Background(), 1, payload); err != nil {
+			t.Errorf("got unexpected error: %v", err)
+		}
+	})
+}

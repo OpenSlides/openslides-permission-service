@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
 	"github.com/OpenSlides/openslides-permission-service/internal/perm"
@@ -25,6 +26,60 @@ func NewMotion(dp dataprovider.DataProvider) *Motion {
 func (m *Motion) Connect(s perm.HandlerStore) {
 	s.RegisterWriteHandler("motion.delete", m.modify("motion.can_manage"))
 	s.RegisterWriteHandler("motion.set_state", m.modify("motion.can_manage_metadata"))
+	s.RegisterWriteHandler("motion.create", m.create())
+}
+
+func (m *Motion) create() perm.WriteCheckerFunc {
+	allowList := map[string]bool{
+		"title":                true,
+		"text":                 true,
+		"reason":               true,
+		"category_id":          true,
+		"statute_paragraph_id": true,
+		"workflow_id":          true,
+		"meeting_id":           true,
+	}
+
+	allowListAmendment := map[string]bool{
+		"parent_id":            true,
+		"amendment_paragraphs": true,
+	}
+
+	for k := range allowList {
+		allowListAmendment[k] = true
+	}
+
+	return func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+		meetingID, _ := strconv.Atoi(string(payload["meeting_id"]))
+
+		perms, err := perm.Perms(ctx, userID, meetingID, m.dp)
+		if err != nil {
+			return nil, fmt.Errorf("fetching perms: %w", err)
+		}
+
+		if perms.HasOne("motion.can_manage") {
+			return nil, nil
+		}
+
+		requiredPerm := "motion.can_create"
+		aList := allowList
+		if _, ok := payload["parent_id"]; ok {
+			requiredPerm = "motion.can_create_amendment"
+			aList = allowListAmendment
+		}
+
+		if !perms.HasOne(requiredPerm) {
+			return nil, perm.NotAllowedf("User %d does not have permission %s", userID, requiredPerm)
+		}
+
+		for e := range payload {
+			if !aList[string(e)] {
+				return nil, perm.NotAllowedf("Field `%s` is forbidden for non manager.", e)
+			}
+		}
+
+		return nil, nil
+	}
 }
 
 func (m *Motion) modify(managePerm string) perm.WriteCheckerFunc {
