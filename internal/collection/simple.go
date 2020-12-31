@@ -12,9 +12,9 @@ import (
 //
 // If the user has the permission, all fields of the given collection can be
 // seen.
-func ReadPerm(dp dataprovider.DataProvider, permission string, collection ...string) perm.ConnecterFunc {
+func ReadPerm(dp dataprovider.DataProvider, permission string, collections ...string) perm.ConnecterFunc {
 	return func(s perm.HandlerStore) {
-		for _, coll := range collection {
+		for _, coll := range collections {
 			s.RegisterReadHandler(coll, perm.ReadeCheckerFunc(func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 				return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 					fqid := fmt.Sprintf("%s/%d", coll, fqfield.ID)
@@ -36,24 +36,24 @@ func ReadPerm(dp dataprovider.DataProvider, permission string, collection ...str
 }
 
 // ReadInMeeting lets the user see the collection, if he is in the meeting.
-func ReadInMeeting(dp dataprovider.DataProvider, collection string) perm.ConnecterFunc {
-	read := func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
-		return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
-			fqid := fmt.Sprintf("%s/%d", collection, fqfield.ID)
-			meetingID, err := dp.MeetingFromModel(ctx, fqid)
-			if err != nil {
-				return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
-			}
-
-			inMeeting, err := dp.InMeeting(ctx, userID, meetingID)
-			if err != nil {
-				return false, fmt.Errorf("see if user %d is in meeting %d: %w", userID, meetingID, err)
-			}
-			return inMeeting, nil
-		})
-	}
-
+func ReadInMeeting(dp dataprovider.DataProvider, collections ...string) perm.ConnecterFunc {
 	return func(s perm.HandlerStore) {
-		s.RegisterReadHandler(collection, perm.ReadeCheckerFunc(read))
+		for _, coll := range collections {
+			s.RegisterReadHandler(coll, perm.ReadeCheckerFunc(func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
+				return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
+					fqid := fmt.Sprintf("%s/%d", coll, fqfield.ID)
+					meetingID, err := dp.MeetingFromModel(ctx, fqid)
+					if err != nil {
+						return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
+					}
+
+					inMeeting, err := dp.InMeeting(ctx, userID, meetingID)
+					if err != nil {
+						return false, fmt.Errorf("see if user %d is in meeting %d: %w", userID, meetingID, err)
+					}
+					return inMeeting, nil
+				})
+			}))
+		}
 	}
 }
