@@ -22,6 +22,7 @@ func openSlidesCollections(edp DataProvider) []perm.Connecter {
 		collection.ReadInMeeting(dp, "tag"),
 		collection.ReadPerm(dp, "projector_message", "meeting.can_see_projector"),
 		collection.ReadPerm(dp, "projector_countdown", "meeting.can_see_projector"),
+		collection.ReadPerm(dp, "projector", "meeting.can_see_projector"),
 		collection.NewMotion(dp),
 	}
 }
