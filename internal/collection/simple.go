@@ -12,25 +12,26 @@ import (
 //
 // If the user has the permission, all fields of the given collection can be
 // seen.
-func ReadPerm(dp dataprovider.DataProvider, collection string, permission string) perm.ConnecterFunc {
-	read := func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
-		return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
-			fqid := fmt.Sprintf("%s/%d", collection, fqfield.ID)
-			meetingID, err := dp.MeetingFromModel(ctx, fqid)
-			if err != nil {
-				return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
-			}
-
-			allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, dp, userID, meetingID, permission))
-			if err != nil {
-				return false, fmt.Errorf("ensuring perm %w", err)
-			}
-			return allowed, nil
-		})
-	}
-
+func ReadPerm(dp dataprovider.DataProvider, permission string, collection ...string) perm.ConnecterFunc {
 	return func(s perm.HandlerStore) {
-		s.RegisterReadHandler(collection, perm.ReadeCheckerFunc(read))
+		for _, coll := range collection {
+			s.RegisterReadHandler(coll, perm.ReadeCheckerFunc(func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
+				return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
+					fqid := fmt.Sprintf("%s/%d", coll, fqfield.ID)
+					meetingID, err := dp.MeetingFromModel(ctx, fqid)
+					if err != nil {
+						return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
+					}
+
+					allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, dp, userID, meetingID, permission))
+					if err != nil {
+						return false, fmt.Errorf("ensuring perm %w", err)
+					}
+					return allowed, nil
+				})
+			}))
+		}
+
 	}
 }
 
