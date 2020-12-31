@@ -37,6 +37,8 @@ func openSlidesCollections(edp DataProvider) []perm.Connecter {
 			"motion_statute_paragraph",
 		),
 
+		collection.Mediafile(dp),
+
 		collection.NewMotion(dp),
 	}
 }
