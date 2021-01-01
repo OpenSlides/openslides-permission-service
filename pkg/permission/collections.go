@@ -13,6 +13,7 @@ func openSlidesCollections(edp DataProvider) []perm.Connecter {
 		collection.NewAutogen(dp),
 
 		collection.NewAgendaItem(dp),
+		collection.ListOfSpeaker(dp),
 		collection.NewSpeaker(dp),
 		collection.NewPersonalNote(dp),
 		collection.NewGroup(dp),
