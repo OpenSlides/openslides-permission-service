@@ -147,8 +147,8 @@ func modelID(data map[string]json.RawMessage) (int, error) {
 
 // Restrict tells, if the user has the permission to see the requested
 // fields.
-func Restrict(dp dataprovider.DataProvider, perm, collection string) ReadeChecker {
-	return ReadeCheckerFunc(func(ctx context.Context, userID int, fqfields []FQField, result map[string]bool) error {
+func Restrict(dp dataprovider.DataProvider, perm, collection string) ReadChecker {
+	return ReadCheckerFunc(func(ctx context.Context, userID int, fqfields []FQField, result map[string]bool) error {
 		if len(fqfields) == 0 {
 			return nil
 		}
