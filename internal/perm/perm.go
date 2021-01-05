@@ -20,21 +20,6 @@ type Permission struct {
 
 // New creates a new Permission object for a user in a specific meeting.
 func New(ctx context.Context, dp dataprovider.DataProvider, userID, meetingID int) (*Permission, error) {
-	// TODO: With this code, a Committe-Manager is superadmin in the meeting.
-	// Discuss if we should do it like this.
-	committeeID, err := dp.CommitteeID(ctx, meetingID)
-	if err != nil {
-		return nil, fmt.Errorf("getting committee id for meeting %d: %w", meetingID, err)
-	}
-
-	committeeManager, err := dp.IsManager(ctx, userID, committeeID)
-	if err != nil {
-		return nil, fmt.Errorf("check for manager in committee %d: %w", committeeID, err)
-	}
-	if committeeManager {
-		return &Permission{admin: true}, nil
-	}
-
 	isMeeting, err := dp.InMeeting(ctx, userID, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("Looking for user %d in meeting %d: %w", userID, meetingID, err)

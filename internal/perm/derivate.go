@@ -3,7 +3,7 @@ package perm
 
 var derivatePerms = map[string][]string{
 	"agenda.can_be_speaker":              {"agenda.can_see"},
-	"agenda.can_manage":                  {"agenda.can_be_speaker", "agenda.can_see", "agenda.can_see_internal_items", "agenda.can_see", "agenda.can_manage_list_of_speakers", "agenda.can_see_list_of_speakers", "agenda.can_see"},
+	"agenda.can_manage":                  {"agenda.can_manage_list_of_speakers", "agenda.can_see_list_of_speakers", "agenda.can_see", "agenda.can_be_speaker", "agenda.can_see", "agenda.can_see_internal_items", "agenda.can_see"},
 	"agenda.can_manage_list_of_speakers": {"agenda.can_see_list_of_speakers", "agenda.can_see"},
 	"agenda.can_see":                     {},
 	"agenda.can_see_internal_items":      {"agenda.can_see"},
@@ -23,8 +23,9 @@ var derivatePerms = map[string][]string{
 	"meeting.can_see_projector":          {},
 	"motion.can_create":                  {"motion.can_see"},
 	"motion.can_create_amendments":       {"motion.can_see"},
-	"motion.can_manage":                  {"motion.can_manage_metadata", "motion.can_support", "motion.can_see", "motion.can_see_internal", "motion.can_see", "motion.can_create", "motion.can_see", "motion.can_create_amendments", "motion.can_see"},
+	"motion.can_manage":                  {"motion.can_manage_polls", "motion.can_see", "motion.can_see_internal", "motion.can_see", "motion.can_create", "motion.can_see", "motion.can_create_amendments", "motion.can_see", "motion.can_manage_metadata", "motion.can_support", "motion.can_see"},
 	"motion.can_manage_metadata":         {"motion.can_support", "motion.can_see"},
+	"motion.can_manage_polls":            {"motion.can_see"},
 	"motion.can_see":                     {},
 	"motion.can_see_internal":            {"motion.can_see"},
 	"motion.can_support":                 {"motion.can_see"},
