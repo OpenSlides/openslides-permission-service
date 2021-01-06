@@ -18,7 +18,7 @@ func TestSpeaker(t *testing.T) {
 	tdp.AddUserToMeeting(3, 1) // Unprivileg user
 
 	dp := dataprovider.DataProvider{External: tdp}
-	s := collection.NewSpeaker(dp)
+	s := collection.ListOfSpeaker(dp)
 	hs := new(tests.HandlerStoreMock)
 	s.Connect(hs)
 	delete := hs.WriteHandler["speaker.delete"]
