@@ -17,14 +17,43 @@ func ListOfSpeaker(dp dataprovider.DataProvider) perm.ConnecterFunc {
 	}
 	return func(s perm.HandlerStore) {
 		s.RegisterWriteHandler("speaker.delete", perm.WriteCheckerFunc(l.deleteSpeaker))
+		s.RegisterWriteHandler("speaker.create", perm.WriteCheckerFunc(l.createSpeaker))
 		s.RegisterReadHandler("speaker", perm.ReadCheckerFunc(l.readSpeaker))
-		s.RegisterWriteHandler("list_of_speakers.delete", perm.WriteCheckerFunc(l.delete))
-		s.RegisterReadHandler("list_of_speakers", perm.ReadCheckerFunc(l.read))
+
+		s.RegisterWriteHandler("list_of_speakers.delete", perm.WriteCheckerFunc(l.deleteList))
+		s.RegisterReadHandler("list_of_speakers", perm.ReadCheckerFunc(l.readList))
 	}
 }
 
 type listOfSpeaker struct {
 	dp dataprovider.DataProvider
+}
+
+func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+	var meetingID int
+	if err := l.dp.Get(ctx, fmt.Sprintf("list_of_speakers/%s/meeting_id", payload["list_of_speakers_id"]), &meetingID); err != nil {
+		return nil, fmt.Errorf("getting meeting id: %w", err)
+	}
+
+	perms, err := perm.New(ctx, l.dp, userID, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("getting permissions: %w", err)
+	}
+
+	var puid int
+	if err := json.Unmarshal(payload["user_id"], &puid); err != nil {
+		return nil, fmt.Errorf("invalid value in payload['user_id']: %s", payload["user_id"])
+	}
+
+	requiredPerm := "agenda.can_manage_list_of_speakers"
+	if puid == userID {
+		requiredPerm = "agenda.can_be_speaker"
+	}
+
+	if perms.Has(requiredPerm) {
+		return nil, nil
+	}
+	return nil, perm.NotAllowedf("User %d can not set user %d on the list of speaker.", userID, puid)
 }
 
 func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
@@ -82,11 +111,11 @@ func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []
 	})
 }
 
-func (l *listOfSpeaker) delete(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+func (l *listOfSpeaker) deleteList(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
 	return nil, perm.NotAllowedf("list_of_speaker.delete is an internal action.")
 }
 
-func (l *listOfSpeaker) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
+func (l *listOfSpeaker) readList(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 		fqid := fmt.Sprintf("list_of_speakers/%d", fqfield.ID)
 
