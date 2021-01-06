@@ -57,6 +57,16 @@ func (sp *Speaker) delete(ctx context.Context, userID int, payload map[string]js
 func (sp *Speaker) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 		fqid := fmt.Sprintf("speaker/%d", fqfield.ID)
+
+		var suid int
+		if err := sp.dp.Get(ctx, fqid+"/user_id", &suid); err != nil {
+			return false, fmt.Errorf("getting speaker user id: %w", err)
+		}
+
+		if suid == userID {
+			return true, nil
+		}
+
 		meetingID, err := sp.dp.MeetingFromModel(ctx, fqid)
 		if err != nil {
 			var errDoesNotExist dataprovider.DoesNotExistError
