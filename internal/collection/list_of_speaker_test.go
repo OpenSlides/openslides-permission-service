@@ -67,6 +67,7 @@ func TestSpeaker(t *testing.T) {
 		tdp.AddBasicModel("speaker", 1)
 		tdp.Set("speaker/1/user_id", "1")
 		tdp.Set("speaker/1/meeting_id", "1")
+		tdp.Set("speaker/2/user_id", "999")
 		tdp.AddPermissionToGroup(1, "agenda.can_see_list_of_speakers")
 		fqfields := mustFQfields(
 			"speaker/1/id",
