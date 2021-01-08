@@ -1,7 +1,6 @@
 package perm
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -18,23 +17,4 @@ type NotAllowedError struct {
 
 func (e NotAllowedError) Error() string {
 	return e.reason
-}
-
-// IsAllowed is a helper around functions, that return NotAllowedErrors
-//
-// If err == nil, it returned true. For errors, it filters out NotAllowedErrors.
-// If err wrapps an NotAllowedError, it teturns false. For other errors, the
-// error is returned.
-//
-// Example: perm.IsAllowed(perm.EnsurePerm(ctx, dp, userID, meetingID, "my.perm"))
-func IsAllowed(err error) (bool, error) {
-	if err == nil {
-		return true, nil
-	}
-
-	var errNotAllowed NotAllowedError
-	if errors.As(err, &errNotAllowed) {
-		return false, nil
-	}
-	return false, err
 }

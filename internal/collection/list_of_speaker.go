@@ -16,8 +16,8 @@ func ListOfSpeaker(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		dp: dp,
 	}
 	return func(s perm.HandlerStore) {
-		s.RegisterWriteHandler("speaker.delete", perm.WriteCheckerFunc(l.deleteSpeaker))
 		s.RegisterWriteHandler("speaker.create", perm.WriteCheckerFunc(l.createSpeaker))
+		s.RegisterWriteHandler("speaker.delete", perm.WriteCheckerFunc(l.deleteSpeaker))
 		s.RegisterReadHandler("speaker", perm.ReadCheckerFunc(l.readSpeaker))
 
 		s.RegisterWriteHandler("list_of_speakers.delete", perm.WriteCheckerFunc(l.deleteList))
@@ -29,20 +29,20 @@ type listOfSpeaker struct {
 	dp dataprovider.DataProvider
 }
 
-func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	var meetingID int
 	if err := l.dp.Get(ctx, fmt.Sprintf("list_of_speakers/%s/meeting_id", payload["list_of_speakers_id"]), &meetingID); err != nil {
-		return nil, fmt.Errorf("getting meeting id: %w", err)
+		return false, fmt.Errorf("getting meeting id: %w", err)
 	}
 
 	perms, err := perm.New(ctx, l.dp, userID, meetingID)
 	if err != nil {
-		return nil, fmt.Errorf("getting permissions: %w", err)
+		return false, fmt.Errorf("getting permissions: %w", err)
 	}
 
 	var puid int
 	if err := json.Unmarshal(payload["user_id"], &puid); err != nil {
-		return nil, fmt.Errorf("invalid value in payload['user_id']: %s", payload["user_id"])
+		return false, fmt.Errorf("invalid value in payload['user_id']: %s", payload["user_id"])
 	}
 
 	requiredPerm := "list_of_speakers.can_manage"
@@ -51,34 +51,35 @@ func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload m
 	}
 
 	if perms.Has(requiredPerm) {
-		return nil, nil
+		return true, nil
 	}
-	return nil, perm.NotAllowedf("User %d can not set user %d on the list of speaker.", userID, puid)
+	return false, perm.NotAllowedf("User %d can not set user %d on the list of speaker.", userID, puid)
 }
 
-func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	fqid := "speaker/" + string(payload["id"])
 	var sUserID int
 	if err := l.dp.Get(ctx, fqid+"/user_id", &sUserID); err != nil {
-		return nil, fmt.Errorf("getting `%s/user_id` from DB: %w", fqid, err)
+		return false, fmt.Errorf("getting `%s/user_id` from DB: %w", fqid, err)
 	}
 
 	// Speaker is deleting himself.
 	if sUserID == userID {
-		return nil, nil
+		return false, nil
 	}
 
 	// Check if request-user is list-of-speaker-manager
 	meetingID, err := l.dp.MeetingFromModel(ctx, fqid)
 	if err != nil {
-		return nil, fmt.Errorf("getting meeting_id from speaker model: %w", err)
+		return false, fmt.Errorf("getting meeting_id from speaker model: %w", err)
 	}
 
-	if err := perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_manage"); err != nil {
-		return nil, fmt.Errorf("ensuring list-of-speaker-manager perms: %w", err)
+	ok, err := perm.HasPerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_manage")
+	if err != nil {
+		return false, fmt.Errorf("ensuring list-of-speaker-manager perms: %w", err)
 	}
 
-	return nil, nil
+	return ok, nil
 }
 
 func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
@@ -103,7 +104,7 @@ func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []
 			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
 
-		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see"))
+		allowed, err := perm.HasPerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see")
 		if err != nil {
 			return false, fmt.Errorf("ensuring perm %w", err)
 		}
@@ -111,8 +112,8 @@ func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []
 	})
 }
 
-func (l *listOfSpeaker) deleteList(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
-	return nil, perm.NotAllowedf("list_of_speaker.delete is an internal action.")
+func (l *listOfSpeaker) deleteList(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	return false, perm.NotAllowedf("list_of_speaker.delete is an internal action.")
 }
 
 func (l *listOfSpeaker) readList(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
@@ -145,7 +146,7 @@ func (l *listOfSpeaker) readList(ctx context.Context, userID int, fqfields []per
 			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
 
-		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see"))
+		allowed, err := perm.HasPerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see")
 		if err != nil {
 			return false, fmt.Errorf("ensuring perm %w", err)
 		}

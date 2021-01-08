@@ -35,26 +35,27 @@ func (a *Autogen) Connect(s perm.HandlerStore) {
 }
 
 func writeChecker(dp dataprovider.DataProvider, collName, permission string) perm.WriteChecker {
-	return perm.WriteCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (map[string]interface{}, error) {
+	return perm.WriteCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 		var meetingID int
 		if err := json.Unmarshal(payload["meeting_id"], &meetingID); err != nil {
 			var id int
 			if err := json.Unmarshal(payload["id"], &id); err != nil {
-				return nil, fmt.Errorf("no valid meeting_id or id in payload")
+				return false, fmt.Errorf("no valid meeting_id or id in payload")
 			}
 
 			fqid := collName + "/" + strconv.Itoa(id)
 			meetingID, err = dp.MeetingFromModel(ctx, fqid)
 			if err != nil {
-				return nil, fmt.Errorf("getting meeting id for %s: %w", fqid, err)
+				return false, fmt.Errorf("getting meeting id for %s: %w", fqid, err)
 			}
 		}
 
-		if err := perm.EnsurePerm(ctx, dp, userID, meetingID, permission); err != nil {
-			return nil, fmt.Errorf("ensuring permission: %w", err)
+		ok, err := perm.HasPerm(ctx, dp, userID, meetingID, permission)
+		if err != nil {
+			return false, fmt.Errorf("checking permission: %w", err)
 		}
 
-		return nil, nil
+		return ok, nil
 	})
 }
 
