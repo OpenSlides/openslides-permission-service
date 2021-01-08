@@ -53,7 +53,8 @@ func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload m
 	if perms.Has(requiredPerm) {
 		return true, nil
 	}
-	return false, perm.NotAllowedf("User %d can not set user %d on the list of speaker.", userID, puid)
+	perm.LogNotAllowedf("User %d can not set user %d on the list of speaker.", userID, puid)
+	return false, nil
 }
 
 func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
@@ -113,7 +114,8 @@ func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []
 }
 
 func (l *listOfSpeaker) deleteList(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
-	return false, perm.NotAllowedf("list_of_speaker.delete is an internal action.")
+	perm.LogNotAllowedf("list_of_speaker.delete is an internal action.")
+	return false, nil
 }
 
 func (l *listOfSpeaker) readList(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {

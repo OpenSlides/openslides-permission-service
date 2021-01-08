@@ -43,7 +43,8 @@ func (a *assignment) candidateCreate(ctx context.Context, userID int, payload ma
 	}
 
 	if phase != 0 {
-		return false, perm.NotAllowedf("Assignment is already in phase %d. No new candidates allowed.", phase)
+		perm.LogNotAllowedf("Assignment is already in phase %d. No new candidates allowed.", phase)
+		return false, nil
 	}
 
 	var cid int
@@ -60,7 +61,8 @@ func (a *assignment) candidateCreate(ctx context.Context, userID int, payload ma
 		return true, nil
 	}
 
-	return false, perm.NotAllowedf("User %d does not have the permission %s", userID, requiredPerm)
+	perm.LogNotAllowedf("User %d does not have the permission %s", userID, requiredPerm)
+	return false, nil
 }
 
 func (a *assignment) candidateDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
@@ -84,7 +86,8 @@ func (a *assignment) candidateDelete(ctx context.Context, userID int, payload ma
 	}
 
 	if phase != 0 {
-		return false, perm.NotAllowedf("Assignment is already in phase %d. You can not remove yourself anymore.", phase)
+		perm.LogNotAllowedf("Assignment is already in phase %d. You can not remove yourself anymore.", phase)
+		return false, nil
 	}
 
 	var cid int
@@ -96,5 +99,6 @@ func (a *assignment) candidateDelete(ctx context.Context, userID int, payload ma
 		return true, nil
 	}
 
-	return false, perm.NotAllowedf("Bad boy")
+	perm.LogNotAllowedf("Bad boy")
+	return false, nil
 }

@@ -76,12 +76,14 @@ func (m *Motion) create() perm.WriteCheckerFunc {
 		}
 
 		if !perms.Has(requiredPerm) {
-			return false, perm.NotAllowedf("User %d does not have permission %s", userID, requiredPerm)
+			perm.LogNotAllowedf("User %d does not have permission %s", userID, requiredPerm)
+			return false, nil
 		}
 
 		for e := range payload {
 			if !aList[string(e)] {
-				return false, perm.NotAllowedf("Field `%s` is forbidden for non manager.", e)
+				perm.LogNotAllowedf("Field `%s` is forbidden for non manager.", e)
+				return false, nil
 			}
 		}
 
@@ -124,7 +126,8 @@ func (m *Motion) modify(managePerm string) perm.WriteCheckerFunc {
 		}
 
 		if !isSubmitter {
-			return false, perm.NotAllowedf("User %d is not a manager and not a submitter of %s", userID, motionFQID)
+			perm.LogNotAllowedf("User %d is not a manager and not a submitter of %s", userID, motionFQID)
+			return false, nil
 		}
 
 		var stateID int
@@ -138,7 +141,8 @@ func (m *Motion) modify(managePerm string) perm.WriteCheckerFunc {
 		}
 
 		if !allowSubmitterEdit {
-			return false, perm.NotAllowedf("Motion state does not allow submitter edites")
+			perm.LogNotAllowedf("Motion state does not allow submitter edites")
+			return false, nil
 		}
 
 		return true, nil

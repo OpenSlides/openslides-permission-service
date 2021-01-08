@@ -32,7 +32,8 @@ func (p *PersonalNote) Connect(s perm.HandlerStore) {
 
 func (p PersonalNote) create(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	if userID == 0 {
-		return false, perm.NotAllowedf("Anonymous can not create personal notes.")
+		perm.LogNotAllowedf("Anonymous can not create personal notes.")
+		return false, nil
 	}
 	return true, nil
 }
@@ -45,7 +46,8 @@ func (p PersonalNote) modify(ctx context.Context, userID int, payload map[string
 	}
 
 	if noteUserID != userID {
-		return false, perm.NotAllowedf("Note belongs to a different user.")
+		perm.LogNotAllowedf("Note belongs to a different user.")
+		return false, nil
 	}
 	return true, nil
 }

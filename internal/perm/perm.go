@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/OpenSlides/openslides-permission-service/internal/dataprovider"
 )
@@ -144,7 +145,8 @@ func HasPerm(ctx context.Context, dp dataprovider.DataProvider, userID int, meet
 
 	hasPerms := perm.Has(permission)
 	if !hasPerms {
-		return false, NotAllowedf("User %d does not have the permission %s int meeting %d", userID, permission, meetingID)
+		LogNotAllowedf("User %d does not have the permission %s in meeting %d", userID, permission, meetingID)
+		return false, nil
 	}
 
 	return true, nil
@@ -170,4 +172,9 @@ func AllFields(fqfields []FQField, result map[string]bool, f func(FQField) (bool
 		}
 	}
 	return nil
+}
+
+// LogNotAllowedf logs the permission failer.
+func LogNotAllowedf(format string, a ...interface{}) {
+	log.Printf(format, a...)
 }

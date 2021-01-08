@@ -25,7 +25,7 @@ func IsAllowed(mux *http.ServeMux, provider IsAlloweder) {
 
 		b, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Can't read request body: "+err.Error(), 500)
+			jsonError(w, "Can't read request body: "+err.Error())
 			return
 		}
 
@@ -35,14 +35,14 @@ func IsAllowed(mux *http.ServeMux, provider IsAlloweder) {
 			DataList [](map[string]json.RawMessage) `json:"data"`
 		}
 		if err := json.Unmarshal(b, &requestData); err != nil {
-			http.Error(w, fmt.Sprintf("Can not decode request body '%s': %v", b, err), 500)
+			jsonError(w, fmt.Sprintf("Can not decode request body '%s': %v", b, err))
 			return
 		}
 
 		allowed, err := provider.IsAllowed(r.Context(), requestData.Name, requestData.UserID, requestData.DataList)
 
 		if err != nil {
-			http.Error(w, "Internal Error. Norman, Do not sent it to client: "+err.Error(), 500)
+			jsonError(w, err.Error())
 			return
 
 		}
@@ -83,4 +83,14 @@ func Health(mux *http.ServeMux, router allrouter) {
 	})
 
 	mux.Handle(url, handler)
+}
+
+func jsonError(w http.ResponseWriter, msg string) {
+	b, err := json.Marshal("Internal Error. Norman, Do not sent it to client: " + msg)
+	if err != nil {
+		b = []byte(`"Very internal error"`)
+	}
+
+	w.WriteHeader(500)
+	w.Write(b)
 }
