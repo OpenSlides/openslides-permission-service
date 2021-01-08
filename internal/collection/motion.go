@@ -309,7 +309,7 @@ func (m *Motion) readChangeRecommendation() perm.ReadCheckerFunc {
 	}
 }
 
-func (m *Motion) canSeeComment(ctx context.Context, userID, id int) (bool, error) {
+func (m *Motion) canSeeCommentSection(ctx context.Context, userID, id int) (bool, error) {
 	fqid := fmt.Sprintf("motion_comment_section/%d", id)
 	meetingID, err := m.dp.MeetingFromModel(ctx, fqid)
 	if err != nil {
@@ -325,7 +325,16 @@ func (m *Motion) canSeeComment(ctx context.Context, userID, id int) (bool, error
 		return true, nil
 	}
 
-	if !perms.Has("motion.can_see") {
+	var motionID int
+	if err := m.dp.Get(ctx, fqid+"/motion_id", &motionID); err != nil {
+		return false, fmt.Errorf("getting motion id: %w", err)
+	}
+
+	motionOK, err := canSeeMotion(ctx, m.dp, userID, motionID)
+	if err != nil {
+		return false, fmt.Errorf("checking permission for motion: %w", err)
+	}
+	if !motionOK {
 		return false, nil
 	}
 
@@ -343,16 +352,16 @@ func (m *Motion) canSeeComment(ctx context.Context, userID, id int) (bool, error
 
 func (m *Motion) readCommentSection(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
-		return m.canSeeComment(ctx, userID, fqfield.ID)
+		return m.canSeeCommentSection(ctx, userID, fqfield.ID)
 	})
 }
 
 func (m *Motion) readComment(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 		var sectionID int
-		if err := m.dp.Get(ctx, fmt.Sprintf("section_id/%d/section_id", fqfield.ID), &sectionID); err != nil {
+		if err := m.dp.Get(ctx, fmt.Sprintf("motion_section/%d/section_id", fqfield.ID), &sectionID); err != nil {
 			return false, fmt.Errorf("getting section id: %w", err)
 		}
-		return m.canSeeComment(ctx, userID, sectionID)
+		return m.canSeeCommentSection(ctx, userID, sectionID)
 	})
 }
