@@ -49,7 +49,7 @@ func TestHttpIsAllowed(t *testing.T) {
 
 			err: fmt.Errorf("something happend :("),
 
-			expectResponse:    `Internal Error. Norman, Do not sent it to client: something happend :(`,
+			expectResponse:    `"Internal Error. Norman, Do not sent it to client: something happend :("`,
 			expectStatuseCode: 500,
 		},
 	} {

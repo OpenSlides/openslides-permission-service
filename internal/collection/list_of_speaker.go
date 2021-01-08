@@ -66,7 +66,7 @@ func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload m
 
 	// Speaker is deleting himself.
 	if sUserID == userID {
-		return false, nil
+		return true, nil
 	}
 
 	// Check if request-user is list-of-speaker-manager
