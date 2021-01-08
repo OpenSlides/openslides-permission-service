@@ -45,9 +45,9 @@ func (l *listOfSpeaker) createSpeaker(ctx context.Context, userID int, payload m
 		return nil, fmt.Errorf("invalid value in payload['user_id']: %s", payload["user_id"])
 	}
 
-	requiredPerm := "agenda_item.can_manage_list_of_speakers"
+	requiredPerm := "list_of_speakers.can_manage"
 	if puid == userID {
-		requiredPerm = "agenda_item.can_be_speaker"
+		requiredPerm = "list_of_speakers.can_be_speaker"
 	}
 
 	if perms.Has(requiredPerm) {
@@ -74,7 +74,7 @@ func (l *listOfSpeaker) deleteSpeaker(ctx context.Context, userID int, payload m
 		return nil, fmt.Errorf("getting meeting_id from speaker model: %w", err)
 	}
 
-	if err := perm.EnsurePerm(ctx, l.dp, userID, meetingID, "agenda_item.can_manage_list_of_speakers"); err != nil {
+	if err := perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_manage"); err != nil {
 		return nil, fmt.Errorf("ensuring list-of-speaker-manager perms: %w", err)
 	}
 
@@ -103,7 +103,7 @@ func (l *listOfSpeaker) readSpeaker(ctx context.Context, userID int, fqfields []
 			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
 
-		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "agenda_item.can_see_list_of_speakers"))
+		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see"))
 		if err != nil {
 			return false, fmt.Errorf("ensuring perm %w", err)
 		}
@@ -145,7 +145,7 @@ func (l *listOfSpeaker) readList(ctx context.Context, userID int, fqfields []per
 			return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
 		}
 
-		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "agenda_item.can_see_list_of_speakers"))
+		allowed, err := perm.IsAllowed(perm.EnsurePerm(ctx, l.dp, userID, meetingID, "list_of_speakers.can_see"))
 		if err != nil {
 			return false, fmt.Errorf("ensuring perm %w", err)
 		}
