@@ -85,12 +85,6 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 	if err != nil {
 		return nil, fmt.Errorf("checking for superuser: %w", err)
 	}
-	if superUser {
-		for _, k := range fqfields {
-			data[k] = true
-		}
-		return data, nil
-	}
 
 	grouped, err := groupFQFields(fqfields)
 	if err != nil {
@@ -98,6 +92,13 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 	}
 
 	for name, fqfields := range grouped {
+		if superUser && name != "personal_note" {
+			for _, k := range fqfields {
+				data[k.String()] = true
+			}
+			continue
+		}
+
 		handler, ok := ps.readHandler[name]
 		if !ok {
 			if developmentMode := true; developmentMode {
