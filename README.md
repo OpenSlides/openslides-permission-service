@@ -75,6 +75,11 @@ is shown. To test only this case, run:
 tests/run.sh TestCases/motion/create.yml:create_amentment_with_wrong_perm
 ```
 
+To see the coverage for all business logic in the browser, run:
+
+```
+make cover
+```
 
 ### With Golang
 
