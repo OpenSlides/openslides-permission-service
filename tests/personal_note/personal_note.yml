@@ -4,6 +4,18 @@ db:
   personal_note/2/user_id: 2
 
 cases:
+- name: create
+  action: personal_note.create
+
+  cases:
+  - name: anonymous
+    user_id: 0
+    is_allowed: false
+
+  - name: logged in
+    user_id: 1
+    is_allowed: true
+
 - name: update
   action: personal_note.update
   payload:

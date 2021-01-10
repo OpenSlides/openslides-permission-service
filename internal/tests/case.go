@@ -20,7 +20,8 @@ type Case struct {
 	DB       map[string]interface{}
 	FQFields []string
 
-	UserID     int `yaml:"user_id"`
+	UserID     *int `yaml:"user_id"`
+	userID     int
 	MeetingID  int `yaml:"meeting_id"`
 	Permission string
 
@@ -131,20 +132,20 @@ func (c *Case) service() (*permission.Permission, error) {
 	}
 
 	// Make sure the user does exists.
-	userFQID := fmt.Sprintf("user/%d", c.UserID)
+	userFQID := fmt.Sprintf("user/%d", c.userID)
 	if data[userFQID+"/id"] == nil {
-		data[userFQID+"/id"] = []byte(strconv.Itoa(c.UserID))
+		data[userFQID+"/id"] = []byte(strconv.Itoa(c.userID))
 	}
 
 	// Make sure, the user is in the meeting.
 	meetingFQID := fmt.Sprintf("meeting/%d", c.MeetingID)
-	data[meetingFQID+"/user_ids"] = jsonAddInt(data[meetingFQID+"/user_ids"], c.UserID)
+	data[meetingFQID+"/user_ids"] = jsonAddInt(data[meetingFQID+"/user_ids"], c.userID)
 
 	// Create group with the user and the given permissions.
 	data["group/1337/id"] = []byte("1337")
 	data[meetingFQID+"/group_ids"] = []byte("[1337]")
-	data["group/1337/user_ids"] = []byte(fmt.Sprintf("[%d]", c.UserID))
-	f := fmt.Sprintf("user/%d/group_$%d_ids", c.UserID, c.MeetingID)
+	data["group/1337/user_ids"] = []byte(fmt.Sprintf("[%d]", c.userID))
+	f := fmt.Sprintf("user/%d/group_$%d_ids", c.userID, c.MeetingID)
 	data[f] = jsonAddInt(data[f], 1337)
 	data["group/1337/meeting_id"] = []byte(strconv.Itoa(c.MeetingID))
 	if c.Permission != "" {
@@ -171,7 +172,7 @@ func (c *Case) testWrite(t *testing.T) {
 	}
 	dataList := []map[string]json.RawMessage{payload}
 
-	got, err := p.IsAllowed(context.Background(), c.Action, c.UserID, dataList)
+	got, err := p.IsAllowed(context.Background(), c.Action, c.userID, dataList)
 	if err != nil {
 		t.Fatalf("IsAllowed retuend unexpected error: %v", err)
 	}
@@ -187,7 +188,7 @@ func (c *Case) testRead(t *testing.T) {
 		t.Fatalf("Can not create permission service: %v", err)
 	}
 
-	got, err := p.RestrictFQFields(context.Background(), c.UserID, c.FQFields)
+	got, err := p.RestrictFQFields(context.Background(), c.userID, c.FQFields)
 	if err != nil {
 		t.Fatalf("Got unexpected error: %v", err)
 	}
@@ -231,8 +232,9 @@ func (c *Case) initSub() {
 		fields = append(fields, s.FQFields...)
 		s.FQFields = fields
 
-		if s.UserID == 0 {
-			s.UserID = c.UserID
+		s.userID = c.userID
+		if s.UserID != nil {
+			s.userID = *s.UserID
 		}
 		if s.MeetingID == 0 {
 			s.MeetingID = c.MeetingID
@@ -289,8 +291,8 @@ func loadFile(path string) (*Case, error) {
 	if c.MeetingID == 0 {
 		c.MeetingID = 1
 	}
-	if c.UserID == 0 {
-		c.UserID = 1
+	if c.userID == 0 {
+		c.userID = 1
 	}
 
 	c.initSub()
