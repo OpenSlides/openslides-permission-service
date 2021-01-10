@@ -131,25 +131,27 @@ func (c *Case) service() (*permission.Permission, error) {
 		return nil, fmt.Errorf("loading database: %w", err)
 	}
 
-	// Make sure the user does exists.
-	userFQID := fmt.Sprintf("user/%d", c.userID)
-	if data[userFQID+"/id"] == nil {
-		data[userFQID+"/id"] = []byte(strconv.Itoa(c.userID))
-	}
+	if c.userID != 0 {
+		// Make sure the user does exists.
+		userFQID := fmt.Sprintf("user/%d", c.userID)
+		if data[userFQID+"/id"] == nil {
+			data[userFQID+"/id"] = []byte(strconv.Itoa(c.userID))
+		}
 
-	// Make sure, the user is in the meeting.
-	meetingFQID := fmt.Sprintf("meeting/%d", c.MeetingID)
-	data[meetingFQID+"/user_ids"] = jsonAddInt(data[meetingFQID+"/user_ids"], c.userID)
+		// Make sure, the user is in the meeting.
+		meetingFQID := fmt.Sprintf("meeting/%d", c.MeetingID)
+		data[meetingFQID+"/user_ids"] = jsonAddInt(data[meetingFQID+"/user_ids"], c.userID)
 
-	// Create group with the user and the given permissions.
-	data["group/1337/id"] = []byte("1337")
-	data[meetingFQID+"/group_ids"] = []byte("[1337]")
-	data["group/1337/user_ids"] = []byte(fmt.Sprintf("[%d]", c.userID))
-	f := fmt.Sprintf("user/%d/group_$%d_ids", c.userID, c.MeetingID)
-	data[f] = jsonAddInt(data[f], 1337)
-	data["group/1337/meeting_id"] = []byte(strconv.Itoa(c.MeetingID))
-	if c.Permission != "" {
-		data["group/1337/permissions"] = []byte(fmt.Sprintf(`["%s"]`, c.Permission))
+		// Create group with the user and the given permissions.
+		data["group/1337/id"] = []byte("1337")
+		data[meetingFQID+"/group_ids"] = []byte("[1337]")
+		data["group/1337/user_ids"] = []byte(fmt.Sprintf("[%d]", c.userID))
+		f := fmt.Sprintf("user/%d/group_$%d_ids", c.userID, c.MeetingID)
+		data[f] = jsonAddInt(data[f], 1337)
+		data["group/1337/meeting_id"] = []byte(strconv.Itoa(c.MeetingID))
+		if c.Permission != "" {
+			data["group/1337/permissions"] = []byte(fmt.Sprintf(`["%s"]`, c.Permission))
+		}
 	}
 
 	return permission.New(&dataProvider{data}), nil
@@ -291,8 +293,9 @@ func loadFile(path string) (*Case, error) {
 	if c.MeetingID == 0 {
 		c.MeetingID = 1
 	}
-	if c.userID == 0 {
-		c.userID = 1
+	c.userID = 1337
+	if c.UserID != nil {
+		c.userID = *c.UserID
 	}
 
 	c.initSub()
