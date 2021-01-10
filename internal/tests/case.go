@@ -151,7 +151,7 @@ func (c *Case) service() (*permission.Permission, error) {
 		data["group/1337/permissions"] = []byte(fmt.Sprintf(`["%s"]`, c.Permission))
 	}
 
-	return permission.New(&TestDataProvider{data}), nil
+	return permission.New(&dataProvider{data}), nil
 }
 
 func (c *Case) testWrite(t *testing.T) {
