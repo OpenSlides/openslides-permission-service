@@ -25,12 +25,12 @@ db:
 
 
 fqfields:
-  - "agenda_item/1/id"
-  - "agenda_item/1/duration"
-  - "agenda_item/1/comment"
-  - "agenda_item/2/id"
-  - "agenda_item/3/id"
-  - "agenda_item/4/id"
+  - agenda_item/1/id
+  - agenda_item/1/duration
+  - agenda_item/1/comment
+  - agenda_item/2/id
+  - agenda_item/3/id
+  - agenda_item/4/id
 
 cases:
 - name: unprivileged user
@@ -44,16 +44,16 @@ cases:
 - name: can_see_internal
   permission: agenda_item.can_see_internal
   can_see:
-  - "agenda_item/1/id"
-  - "agenda_item/1/duration"
-  - "agenda_item/3/id"
+  - agenda_item/1/id
+  - agenda_item/1/duration
+  - agenda_item/3/id
 
 - name: can_manage
   permission: agenda_item.can_manage
   can_see:
-  - "agenda_item/1/id"
-  - "agenda_item/1/duration"
-  - "agenda_item/1/comment"
-  - "agenda_item/2/id"
-  - "agenda_item/3/id"
-  - "agenda_item/4/id"
+  - agenda_item/1/id
+  - agenda_item/1/duration
+  - agenda_item/1/comment
+  - agenda_item/2/id
+  - agenda_item/3/id
+  - agenda_item/4/id

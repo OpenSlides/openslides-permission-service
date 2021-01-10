@@ -52,6 +52,30 @@ curl http://localhost:9005/internal/permission/is_allowed -d '{"name":"topic.cre
 
 ## Test
 
+### Only Business Logic
+
+The business logic are the cases, when the permission case should return true or
+false or restrict some fqfields.
+
+To test only the to business logic run:
+
+```
+tests/run.sh
+```
+
+If a test case fails, a message like:
+
+```
+FAIL: TestCases/motion/create.yml:create_amentment_with_wrong_perm (0.00s)
+```
+
+is shown. To test only this case, run:
+
+```
+tests/run.sh TestCases/motion/create.yml:create_amentment_with_wrong_perm
+```
+
+
 ### With Golang
 
 ```

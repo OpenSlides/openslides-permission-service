@@ -57,7 +57,10 @@ func (m *Motion) create() perm.WriteCheckerFunc {
 	}
 
 	return func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
-		meetingID, _ := strconv.Atoi(string(payload["meeting_id"]))
+		meetingID, err := strconv.Atoi(string(payload["meeting_id"]))
+		if err != nil {
+			return false, fmt.Errorf("invalid field meeting_id in payload: %w", err)
+		}
 
 		perms, err := perm.New(ctx, m.dp, userID, meetingID)
 		if err != nil {
@@ -65,7 +68,7 @@ func (m *Motion) create() perm.WriteCheckerFunc {
 		}
 
 		if perms.Has("motion.can_manage") {
-			return false, nil
+			return true, nil
 		}
 
 		requiredPerm := "motion.can_create"
@@ -105,7 +108,7 @@ func (m *Motion) modify(managePerm string) perm.WriteCheckerFunc {
 		}
 
 		if isManager {
-			return false, nil
+			return true, nil
 		}
 
 		var submitterIDs []int

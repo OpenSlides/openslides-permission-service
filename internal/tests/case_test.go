@@ -16,7 +16,9 @@ func TestCases(t *testing.T) {
 		}
 
 		c.walk(func(c *Case) {
-			c.test(t)
+			t.Run(c.Name, func(t *testing.T) {
+				c.test(t)
+			})
 		})
 
 	}

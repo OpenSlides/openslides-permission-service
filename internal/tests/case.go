@@ -20,8 +20,8 @@ type Case struct {
 	DB       map[string]interface{}
 	FQFields []string
 
-	UserID     int
-	MeetingID  int
+	UserID     int `yaml:"user_id"`
+	MeetingID  int `yaml:"meeting_id"`
 	Permission string
 
 	Payload map[string]interface{}
@@ -41,6 +41,12 @@ func (c *Case) walk(f func(*Case)) {
 }
 
 func (c *Case) test(t *testing.T) {
+	if onlyTest := os.Getenv("TEST_CASE"); onlyTest != "" {
+		onlyTest = strings.TrimPrefix(onlyTest, "TestCases/")
+		if c.Name != onlyTest {
+			return
+		}
+	}
 	if c.IsAllowed != nil {
 		c.testWrite(t)
 	}
@@ -125,24 +131,22 @@ func (c *Case) service() (*permission.Permission, error) {
 	}
 
 	// Make sure the user does exists.
-	c.UserID = defaultInt(c.UserID, 1337)
-	meetingID := defaultInt(c.MeetingID, 1)
 	userFQID := fmt.Sprintf("user/%d", c.UserID)
 	if data[userFQID+"/id"] == nil {
 		data[userFQID+"/id"] = []byte(strconv.Itoa(c.UserID))
 	}
 
 	// Make sure, the user is in the meeting.
-	meetingFQID := fmt.Sprintf("meeting/%d", meetingID)
+	meetingFQID := fmt.Sprintf("meeting/%d", c.MeetingID)
 	data[meetingFQID+"/user_ids"] = jsonAddInt(data[meetingFQID+"/user_ids"], c.UserID)
 
 	// Create group with the user and the given permissions.
 	data["group/1337/id"] = []byte("1337")
 	data[meetingFQID+"/group_ids"] = []byte("[1337]")
 	data["group/1337/user_ids"] = []byte(fmt.Sprintf("[%d]", c.UserID))
-	f := fmt.Sprintf("user/%d/group_$%d_ids", c.UserID, meetingID)
+	f := fmt.Sprintf("user/%d/group_$%d_ids", c.UserID, c.MeetingID)
 	data[f] = jsonAddInt(data[f], 1337)
-	data["group/1337/meeting_id"] = []byte(strconv.Itoa(meetingID))
+	data["group/1337/meeting_id"] = []byte(strconv.Itoa(c.MeetingID))
 	if c.Permission != "" {
 		data["group/1337/permissions"] = []byte(fmt.Sprintf(`["%s"]`, c.Permission))
 	}
@@ -209,8 +213,9 @@ func (c *Case) initSub() {
 	for i, s := range c.Cases {
 		name := s.Name
 		if name == "" {
-			name = fmt.Sprintf("case %d", i)
+			name = fmt.Sprintf("case_%d", i)
 		}
+		name = strings.ReplaceAll(name, " ", "_")
 		s.Name = c.Name + ":" + name
 
 		db := make(map[string]interface{})
@@ -275,11 +280,18 @@ func loadFile(path string) (*Case, error) {
 		return nil, err
 	}
 
-	name := path
+	name := strings.TrimPrefix(path, "../../tests/")
 	if c.Name != "" {
 		name += ":" + c.Name
 	}
 	c.Name = name
+
+	if c.MeetingID == 0 {
+		c.MeetingID = 1
+	}
+	if c.UserID == 0 {
+		c.UserID = 1
+	}
 
 	c.initSub()
 
