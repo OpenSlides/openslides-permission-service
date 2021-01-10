@@ -27,8 +27,8 @@ type Case struct {
 	Payload map[string]interface{}
 	Action  string
 
-	IsAllowed  *bool `yaml:"is_allowed"`
-	Restricted []string
+	IsAllowed *bool    `yaml:"is_allowed"`
+	CanSee    []string `yaml:"can_see"`
 
 	Cases []*Case
 }
@@ -44,23 +44,84 @@ func (c *Case) test(t *testing.T) {
 	if c.IsAllowed != nil {
 		c.testWrite(t)
 	}
-	if c.Restricted != nil {
+	if c.CanSee != nil {
 		c.testRead(t)
 	}
 }
 
-func (c *Case) service() (*permission.Permission, error) {
+func (c *Case) loadDB() (map[string]json.RawMessage, error) {
 	data := make(map[string]json.RawMessage)
-	for k, v := range c.DB {
-		bs, err := json.Marshal(v)
-		if err != nil {
-			return nil, fmt.Errorf("creating test db. Key %s: %w", k, err)
-		}
-		data[k] = bs
+	for dbKey, dbValue := range c.DB {
+		parts := strings.Split(dbKey, "/")
+		switch len(parts) {
+		case 1:
+			map1, ok := dbValue.(map[interface{}]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid type in db key %s: %T", dbKey, dbValue)
+			}
+			for rawID, rawObject := range map1 {
+				id, ok := rawID.(int)
+				if !ok {
+					return nil, fmt.Errorf("invalid id type: got %T expected int", rawID)
+				}
+				field, ok := rawObject.(map[string]interface{})
+				if !ok {
+					return nil, fmt.Errorf("invalid object type: got %T, expected map[string]interface{}", rawObject)
+				}
 
-		parts := strings.Split(k, "/")
-		idField := fmt.Sprintf("%s/%s/id", parts[0], parts[1])
-		data[idField] = []byte(parts[1])
+				for fieldName, fieldValue := range field {
+					fqfield := fmt.Sprintf("%s/%d/%s", dbKey, id, fieldName)
+					bs, err := json.Marshal(fieldValue)
+					if err != nil {
+						return nil, fmt.Errorf("creating test db. Key %s: %w", fqfield, err)
+					}
+					data[fqfield] = bs
+				}
+
+				idField := fmt.Sprintf("%s/%d/id", dbKey, id)
+				data[idField] = json.RawMessage(strconv.Itoa(id))
+			}
+
+		case 2:
+			field, ok := dbValue.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid object type: got %T, expected map[string]interface{}", dbValue)
+			}
+
+			for fieldName, fieldValue := range field {
+				fqfield := fmt.Sprintf("%s/%s/%s", parts[0], parts[1], fieldName)
+				bs, err := json.Marshal(fieldValue)
+				if err != nil {
+					return nil, fmt.Errorf("creating test db. Key %s: %w", fqfield, err)
+				}
+				data[fqfield] = bs
+			}
+
+			idField := fmt.Sprintf("%s/%s/id", parts[0], parts[1])
+			data[idField] = []byte(parts[1])
+
+		case 3:
+			bs, err := json.Marshal(dbValue)
+			if err != nil {
+				return nil, fmt.Errorf("creating test db. Key %s: %w", dbKey, err)
+			}
+			data[dbKey] = bs
+
+			idField := fmt.Sprintf("%s/%s/id", parts[0], parts[1])
+			data[idField] = []byte(parts[1])
+		default:
+			return nil, fmt.Errorf("invalid db key %s", dbKey)
+		}
+
+	}
+
+	return data, nil
+}
+
+func (c *Case) service() (*permission.Permission, error) {
+	data, err := c.loadDB()
+	if err != nil {
+		return nil, fmt.Errorf("loading database: %w", err)
 	}
 
 	// Make sure the user does exists.
@@ -127,17 +188,17 @@ func (c *Case) testRead(t *testing.T) {
 		t.Fatalf("Got unexpected error: %v", err)
 	}
 
-	if len(got) != len(c.Restricted) {
+	if len(got) != len(c.CanSee) {
 		var gotFields []string
 		for k, v := range got {
 			if v {
 				gotFields = append(gotFields, k)
 			}
 		}
-		t.Errorf("Got %v, expected %v", gotFields, c.Restricted)
+		t.Errorf("Got %v, expected %v", gotFields, c.CanSee)
 	}
 
-	for _, f := range c.Restricted {
+	for _, f := range c.CanSee {
 		if !got[f] {
 			t.Errorf("Did not allow %s", f)
 		}
