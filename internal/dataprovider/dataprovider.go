@@ -97,7 +97,7 @@ func (dp *DataProvider) IsSuperuser(ctx context.Context, userID int) (bool, erro
 	}
 
 	var orgaLevel string
-	if err := dp.GetIfExist(ctx, "user/%d/organisation_management_level", &orgaLevel); err != nil {
+	if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
 		return false, fmt.Errorf("getting organisation level: %w", err)
 	}
 	if orgaLevel == "superuser" {
