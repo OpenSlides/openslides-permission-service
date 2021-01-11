@@ -21,6 +21,7 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 		collection.NewPersonalNote(dp),
 		collection.User(dp),
 
+		collection.Meeting(dp),
 		collection.Committee(dp),
 		collection.Public(dp, "resource", "organisation"),
 
