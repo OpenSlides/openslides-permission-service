@@ -33,6 +33,22 @@ func ReadInMeeting(dp dataprovider.DataProvider, collections ...string) perm.Con
 	}
 }
 
+// Public can be seen by everyone.
+func Public(dp dataprovider.DataProvider, collections ...string) perm.ConnecterFunc {
+	return func(s perm.HandlerStore) {
+		for _, c := range collections {
+			s.RegisterReadHandler(c, perm.ReadCheckerFunc(isPublic))
+		}
+	}
+}
+
+func isPublic(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
+	for _, field := range fqfields {
+		result[field.String()] = true
+	}
+	return nil
+}
+
 func isInMeeting(dp dataprovider.DataProvider, collection string) perm.ReadCheckerFunc {
 	return func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 		return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
