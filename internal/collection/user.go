@@ -37,5 +37,59 @@ func (u *user) create(ctx context.Context, userID int, payload map[string]json.R
 }
 
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
+	// Bei can_manage_organisation und can_manage_users kann man alles sehen. Auch bei can_manage_organisation??
+
+	// Level:
+	// 0: no perms
+	// 1: can see
+	// 2: can see extra
+	// 3: can_manage or committtee manager
+	meetingLevel := make(map[int]int)
+
+	// Ein committe manager darf alles von usern in seinen meetings sehen.
+
+	// TODO: Ein nutzer darf sich immer selbst sehen, kann man das vorziehen? Nicht wenn er mehr rechte aus einem meeting erhält.
+
+	grouped := groupByID(fqfields)
+	for _, fqfields := range grouped {
+		var meetingIDs []int
+		if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/is_present_in_meeting_ids", fqfields[0].ID), &meetingIDs); err != nil {
+			return fmt.Errorf("getting meeting ids: %w", err)
+		}
+		for _, meetingID := range meetingIDs {
+			level, ok := meetingLevel[meetingID]
+			if !ok {
+				// TODO: check for committee manager
+				perms, err := perm.New(ctx, u.dp, userID, meetingID)
+				if err != nil {
+					return fmt.Errorf("getting perms for user %d in meeting %d: %w", userID, meetingID, err)
+				}
+				if perms.Has("user.can_see") {
+					level = 1
+				}
+				if perms.Has("user.can_see_extra_data") {
+					level = 2
+				}
+				if perms.Has("user.can_manage") {
+					level = 3
+				}
+
+				meetingLevel[meetingID] = level
+			}
+
+			// TODO: use level to find out what fields to see
+		}
+	}
 	return nil
+}
+
+// groupByID groups a list of fqfields by there id part.
+//
+// It expects the input to be sorted.
+func groupByID(fqfields []perm.FQField) map[int][]perm.FQField {
+	grouped := make(map[int][]perm.FQField)
+	for _, f := range fqfields {
+		grouped[f.ID] = append(grouped[f.ID], f)
+	}
+	return grouped
 }
