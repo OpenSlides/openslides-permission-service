@@ -1,0 +1,123 @@
+---
+fqfields:
+- user/1/id
+- user/1/username
+- user/1/title
+- user/1/first_name
+- user/1/last_name
+- user/1/is_active
+- user/1/is_physical_person
+- user/1/password
+- user/1/default_password
+- user/1/gender
+- user/1/email
+- user/1/default_number
+- user/1/default_structure_level
+- user/1/last_email_send
+- user/1/is_demo_user
+- user/1/organisation_management_level
+- user/1/is_present_in_meeting_ids
+- user/1/meeting_id
+- user/1/guest_meeting_ids
+- user/1/committee_as_member_ids
+- user/1/committee_as_manager_ids
+- user/1/comment_$
+- user/1/number_$
+- user/1/structure_level_$
+- user/1/about_me_$
+- user/1/vote_weight_$
+
+cases:
+- name: no perm
+  can_see:
+
+- name: can see
+  permission: user.can_see
+  can_see:
+  - user/1/id
+  - user/1/username
+  - user/1/title
+  - user/1/first_name
+  - user/1/last_name
+  - user/1/structure_level
+  - user/1/number
+  - user/1/about_me
+  - user/1/groups_id
+  - user/1/is_present
+  - user/1/is_committee
+  - user/1/vote_weight
+  - user/1/gender
+
+- name: can see extra
+  permission: user.can_see_extra_data
+  can_see:
+  - user/1/id
+  - user/1/username
+  - user/1/title
+  - user/1/first_name
+  - user/1/last_name
+  - user/1/structure_level
+  - user/1/number
+  - user/1/about_me
+  - user/1/groups_id
+  - user/1/is_present
+  - user/1/is_committee
+  - user/1/vote_weight
+  - user/1/gender
+
+  - user/1/email
+  - user/1/last_email_send
+  - user/1/comment
+  - user/1/is_active
+  - user/1/auth_type
+  - user/1/vote_delegated_to_id
+  - user/1/vote_delegated_from_users_id
+
+- name: can manage
+  permission: user.can_manage
+  can_see:
+  - user/1/id
+  - user/1/username
+  - user/1/title
+  - user/1/first_name
+  - user/1/last_name
+  - user/1/structure_level
+  - user/1/number
+  - user/1/about_me
+  - user/1/groups_id
+  - user/1/is_present
+  - user/1/is_committee
+  - user/1/vote_weight
+  - user/1/gender
+
+  - user/1/email
+  - user/1/last_email_send
+  - user/1/comment
+  - user/1/is_active
+  - user/1/auth_type
+  - user/1/vote_delegated_to_id
+  - user/1/vote_delegated_from_users_id
+
+  - user/1/default_password
+
+- name: can see own user
+  user_id: 1
+  can_see:
+  - user/1/id
+  - user/1/username
+  - user/1/title
+  - user/1/first_name
+  - user/1/last_name
+  - user/1/structure_level
+  - user/1/number
+  - user/1/about_me
+  - user/1/groups_id
+  - user/1/is_present
+  - user/1/is_committee
+  - user/1/vote_weight
+  - user/1/gender
+
+  - user/1/email
+  - user/1/gender
+  - user/1/vote_delegated_to_id
+  - user/1/vote_delegated_from_users_id
