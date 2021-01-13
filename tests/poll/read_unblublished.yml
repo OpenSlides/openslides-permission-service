@@ -87,9 +87,14 @@ cases:
   fqfields:
   - vote/1/id
   - vote/1/value
+  - vote/1/weight
 
   cases:
     - name: no perms
+      can_see:
+
+    - name: no perms vote user
+      user_id: 1
       can_see:
 
     - name: can_see
@@ -102,9 +107,11 @@ cases:
       can_see:
       - vote/1/id
       - vote/1/value
+      - vote/1/weight
 
     - name: can_manage
       permission: agenda_item.can_manage
       can_see:
       - vote/1/id
       - vote/1/value
+      - vote/1/weight
