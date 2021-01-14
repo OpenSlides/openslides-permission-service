@@ -14,11 +14,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//go:generate  sh -c "go run gen_fields/main.go > fields.go && go fmt fields.go"
+
 // Case object for testing.
 type Case struct {
 	Name     string
 	DB       map[string]interface{}
 	FQFields []string
+	FQIDs    []string
 
 	UserID     *int `yaml:"user_id"`
 	userID     int
@@ -28,8 +31,10 @@ type Case struct {
 	Payload map[string]interface{}
 	Action  string
 
-	IsAllowed *bool    `yaml:"is_allowed"`
-	CanSee    []string `yaml:"can_see"`
+	IsAllowed     *bool    `yaml:"is_allowed"`
+	CanSee        []string `yaml:"can_see"`
+	CanSeeAtLeast []string `yaml:"can_see_at_least"`
+	CanNotSee     []string `yaml:"can_not_see"`
 
 	Cases []*Case
 }
@@ -44,14 +49,14 @@ func (c *Case) walk(f func(*Case)) {
 func (c *Case) test(t *testing.T) {
 	if onlyTest := os.Getenv("TEST_CASE"); onlyTest != "" {
 		onlyTest = strings.TrimPrefix(onlyTest, "TestCases/")
-		if c.Name != onlyTest {
+		if !strings.HasPrefix(c.Name, onlyTest) {
 			return
 		}
 	}
 	if c.IsAllowed != nil {
 		c.testWrite(t)
 	}
-	if c.CanSee != nil {
+	if c.CanSee != nil || c.CanNotSee != nil || c.CanSeeAtLeast != nil {
 		c.testRead(t)
 	}
 }
@@ -184,10 +189,38 @@ func (c *Case) testWrite(t *testing.T) {
 	}
 }
 
+// expandFQID returns all fqfields for an fqid.
+func expandFQID(fqid string) []string {
+	var fqfields []string
+	parts := strings.Split(fqid, "/")
+	for _, field := range collectionFields[parts[0]] {
+		fqfields = append(fqfields, fmt.Sprintf("%s/%s/%s", parts[0], parts[1], field))
+	}
+	return fqfields
+}
+
+// expandFQIDList calls expandFQID on every value in the list. Values that are
+// not an fqid are added to the output as it.
+func expandFQIDList(values []string) []string {
+	var expanded []string
+	for _, value := range values {
+		if strings.Count(value, "/") == 1 {
+			expanded = append(expanded, expandFQID(value)...)
+			continue
+		}
+		expanded = append(expanded, value)
+	}
+	return expanded
+}
+
 func (c *Case) testRead(t *testing.T) {
 	p, err := c.service()
 	if err != nil {
 		t.Fatalf("Can not create permission service: %v", err)
+	}
+
+	for _, fqid := range c.FQIDs {
+		c.FQFields = append(c.FQFields, expandFQID(fqid)...)
 	}
 
 	got, err := p.RestrictFQFields(context.Background(), c.userID, c.FQFields)
@@ -195,19 +228,38 @@ func (c *Case) testRead(t *testing.T) {
 		t.Fatalf("Got unexpected error: %v", err)
 	}
 
-	if len(got) != len(c.CanSee) {
-		var gotFields []string
-		for k, v := range got {
-			if v {
-				gotFields = append(gotFields, k)
+	if c.CanSee != nil {
+		canSee := expandFQIDList(c.CanSee)
+		if len(got) != len(canSee) {
+			var gotFields []string
+			for k, v := range got {
+				if v {
+					gotFields = append(gotFields, k)
+				}
+			}
+			t.Errorf("Got %v, expected %v", gotFields, canSee)
+		}
+
+		for _, f := range canSee {
+			if !got[f] {
+				t.Errorf("Did not allow %s", f)
 			}
 		}
-		t.Errorf("Got %v, expected %v", gotFields, c.CanSee)
 	}
 
-	for _, f := range c.CanSee {
-		if !got[f] {
-			t.Errorf("Did not allow %s", f)
+	if c.CanNotSee != nil {
+		for _, f := range expandFQIDList(c.CanNotSee) {
+			if got[f] {
+				t.Errorf("Got %s", f)
+			}
+		}
+	}
+
+	if c.CanSeeAtLeast != nil {
+		for _, f := range expandFQIDList(c.CanSeeAtLeast) {
+			if !got[f] {
+				t.Errorf("Did not get %s", f)
+			}
 		}
 	}
 }
@@ -230,9 +282,12 @@ func (c *Case) initSub() {
 		}
 		s.DB = db
 
-		fields := append([]string{}, c.FQFields...)
-		fields = append(fields, s.FQFields...)
-		s.FQFields = fields
+		if s.FQFields == nil {
+			s.FQFields = c.FQFields
+		}
+		if s.FQIDs == nil {
+			s.FQIDs = c.FQIDs
+		}
 
 		s.userID = c.userID
 		if s.UserID != nil {

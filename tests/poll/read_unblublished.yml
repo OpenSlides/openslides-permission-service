@@ -6,15 +6,8 @@ cases:
       meeting_id: 1
       state: created
 
-  fqfields:
-  - poll/1/id
-  - poll/1/votesvalid
-  - poll/1/votesinvalid
-  - poll/1/votescast
-  - poll/1/voted_ids
-  - poll/1/global_yes
-  - poll/1/global_no
-  - poll/1/global_abstain
+  fqids:
+  - poll/1
 
   cases:
     - name: no perms
@@ -22,23 +15,21 @@ cases:
 
     - name: can_see
       permission: agenda_item.can_see
-      can_see:
+      can_see_at_least:
       - poll/1/id
       - poll/1/global_yes
       - poll/1/global_no
       - poll/1/global_abstain
-
-    - name: can_manage
-      permission: agenda_item.can_manage
-      can_see:
-      - poll/1/id
+      can_not_see:
       - poll/1/votesvalid
       - poll/1/votesinvalid
       - poll/1/votescast
       - poll/1/voted_ids
-      - poll/1/global_yes
-      - poll/1/global_no
-      - poll/1/global_abstain
+
+    - name: can_manage
+      permission: agenda_item.can_manage
+      can_see:
+      - poll/1
 
 
 - name: unpublished option
@@ -48,12 +39,8 @@ cases:
       state: created
     option/1/poll_id: 1
 
-  fqfields:
-  - option/1/id
-  - option/1/yes
-  - option/1/no
-  - option/1/abstain
-  - option/1/vote_ids
+  fqids:
+  - option/1
 
   cases:
     - name: no perms
@@ -61,17 +48,19 @@ cases:
 
     - name: can_see
       permission: agenda_item.can_see
-      can_see:
+      can_see_at_least:
       - option/1/id
-
-    - name: can_manage
-      permission: agenda_item.can_manage
-      can_see:
-      - option/1/id
+      can_not_see:
       - option/1/yes
       - option/1/no
       - option/1/abstain
       - option/1/vote_ids
+
+
+    - name: can_manage
+      permission: agenda_item.can_manage
+      can_see:
+      - option/1
 
 
 - name: unpublished vote
@@ -84,10 +73,8 @@ cases:
       option_id: 1
       user_id: 1
 
-  fqfields:
-  - vote/1/id
-  - vote/1/value
-  - vote/1/weight
+  fqids:
+  - vote/1
 
   cases:
     - name: no perms
@@ -105,13 +92,9 @@ cases:
       permission: agenda_item.can_see
       user_id: 1
       can_see:
-      - vote/1/id
-      - vote/1/value
-      - vote/1/weight
+      - vote/1
 
     - name: can_manage
       permission: agenda_item.can_manage
       can_see:
-      - vote/1/id
-      - vote/1/value
-      - vote/1/weight
+      - vote/1
