@@ -37,7 +37,9 @@ func (u *user) create(ctx context.Context, userID int, payload map[string]json.R
 }
 
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
-	// Bei can_manage_organisation und can_manage_users kann man alles sehen. Auch bei can_manage_organisation??
+	// Bei can_manage_organisation und can_manage_users(?) kann man alles sehen.
+
+	// TODO: by $-Feldern auch abgeleitete Felder behandeln.
 
 	// Level:
 	// 0: no perms
@@ -46,7 +48,7 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 	// 3: can_manage or committtee manager
 	meetingLevel := make(map[int]int)
 
-	// Ein committe manager darf alles von usern in seinen meetings sehen.
+	// Ein committe manager darf alles(?) von usern in seinen meetings sehen.
 
 	// TODO: Ein nutzer darf sich immer selbst sehen, kann man das vorziehen? Nicht wenn er mehr rechte aus einem meeting erhält.
 
