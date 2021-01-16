@@ -11,7 +11,7 @@ meeting_id: 1
 
 cases:
 - name: no perm
-  can_see:
+  can_see: []
 
 - name: can see
   permission: agenda_item.can_see

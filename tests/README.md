@@ -12,12 +12,12 @@ There are two types of tests:
 1. Performing an action: To test an action that is called by the backend for
    write requests.
 
-   * `action`: Name of the action. See backend health output for all action
-     names.
+  * `action`: Name of the action. See backend health output for all action
+    names.
 
-   * `is_allowed`: Determines the expected result (`true` or `false`).
+  * `is_allowed`: Determines the expected result (`true` or `false`).
 
-   * `payload`: User-Payload that is used for the action.
+  * `payload`: User-Payload that is used for the action.
 
 2. Reading FQFields: To test whether the user can see FQFields or not.
 
@@ -26,15 +26,11 @@ There are two types of tests:
   * `fqids`: List of fqids. Adds all fields of the objects to the fqfields
     attribute.
 
-  * `can_see`: A list of fields that the user is expected to see. This field is
-    the expected exact outout of the `RestrictFQFields` function. A value can also
-    be a fqid. In this case, all fields of the collection should be seen.
+  * `can_see`: A list of fields that the user is expected to see. Omit fields
+    that the user can not see.
 
-  * `can_see_at_least`: Like `can_see` but does not throw an error, if more
-    fields are returned.
-
-  * `can_not_see`: A list of fields that the user is now allowed to see. A value
-    can also be a fqid. See `can_see`.
+  * `can_not_see`: A shortcut for saying `can_see` everything from `fqfields`
+    expect this once.
 
 Both types can be combined.
 

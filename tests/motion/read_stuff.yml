@@ -22,4 +22,4 @@ casses:
   - motion_statute_paragraph/1
 
 - name: without_perm
-  can_see:
+  can_see: []

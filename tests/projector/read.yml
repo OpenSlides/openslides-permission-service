@@ -36,4 +36,4 @@ casses:
 
 
 - name: without_perm
-  can_see:
+  can_see: []

@@ -31,10 +31,9 @@ type Case struct {
 	Payload map[string]interface{}
 	Action  string
 
-	IsAllowed     *bool    `yaml:"is_allowed"`
-	CanSee        []string `yaml:"can_see"`
-	CanSeeAtLeast []string `yaml:"can_see_at_least"`
-	CanNotSee     []string `yaml:"can_not_see"`
+	IsAllowed *bool    `yaml:"is_allowed"`
+	CanSee    []string `yaml:"can_see"` // TODO: fix nil != undefined
+	CanNotSee []string `yaml:"can_not_see"`
 
 	Cases []*Case
 }
@@ -56,7 +55,7 @@ func (c *Case) test(t *testing.T) {
 	if c.IsAllowed != nil {
 		c.testWrite(t)
 	}
-	if c.CanSee != nil || c.CanNotSee != nil || c.CanSeeAtLeast != nil {
+	if c.CanSee != nil || c.CanNotSee != nil {
 		c.testRead(t)
 	}
 }
@@ -189,30 +188,6 @@ func (c *Case) testWrite(t *testing.T) {
 	}
 }
 
-// expandFQID returns all fqfields for an fqid.
-func expandFQID(fqid string) []string {
-	var fqfields []string
-	parts := strings.Split(fqid, "/")
-	for _, field := range collectionFields[parts[0]] {
-		fqfields = append(fqfields, fmt.Sprintf("%s/%s/%s", parts[0], parts[1], field))
-	}
-	return fqfields
-}
-
-// expandFQIDList calls expandFQID on every value in the list. Values that are
-// not an fqid are added to the output as it.
-func expandFQIDList(values []string) []string {
-	var expanded []string
-	for _, value := range values {
-		if strings.Count(value, "/") == 1 {
-			expanded = append(expanded, expandFQID(value)...)
-			continue
-		}
-		expanded = append(expanded, value)
-	}
-	return expanded
-}
-
 func (c *Case) testRead(t *testing.T) {
 	p, err := c.service()
 	if err != nil {
@@ -230,36 +205,37 @@ func (c *Case) testRead(t *testing.T) {
 
 	if c.CanSee != nil {
 		canSee := expandFQIDList(c.CanSee)
-		if len(got) != len(canSee) {
-			var gotFields []string
-			for k, v := range got {
-				if v {
-					gotFields = append(gotFields, k)
-				}
-			}
-			t.Errorf("Got %v, expected %v", gotFields, canSee)
-		}
-
-		for _, f := range canSee {
-			if !got[f] {
-				t.Errorf("Did not allow %s", f)
-			}
-		}
+		canNotSee := sliceSub(c.FQFields, canSee)
+		c.readTestResult(t, got, canSee, canNotSee)
 	}
 
 	if c.CanNotSee != nil {
-		for _, f := range expandFQIDList(c.CanNotSee) {
-			if got[f] {
-				t.Errorf("Got %s", f)
-			}
+		canNotSee := expandFQIDList(c.CanNotSee)
+		canSee := sliceSub(c.FQFields, canNotSee)
+		c.readTestResult(t, got, canSee, canNotSee)
+	}
+}
+
+func (c *Case) readTestResult(t *testing.T, got map[string]bool, canSee, canNotSee []string) {
+	if len(got) != len(canSee) {
+		t.Errorf("Got %d fields, expected %d", len(got), len(canSee))
+	}
+
+	for _, f := range canSee {
+		if !got[f] {
+			t.Errorf("Got field %s", f)
 		}
 	}
 
-	if c.CanSeeAtLeast != nil {
-		for _, f := range expandFQIDList(c.CanSeeAtLeast) {
-			if !got[f] {
-				t.Errorf("Did not get %s", f)
-			}
+	gotnot := sliceSubSet(c.FQFields, got)
+	set := make(map[string]bool, len(gotnot))
+	for _, v := range gotnot {
+		set[v] = true
+	}
+
+	for _, f := range canNotSee {
+		if !set[f] {
+			t.Errorf("Did not get field %s", f)
 		}
 	}
 }
@@ -384,4 +360,46 @@ func jsonAddInt(list json.RawMessage, value int) json.RawMessage {
 	decoded = append(decoded, value)
 	list, _ = json.Marshal(decoded)
 	return list
+}
+
+func sliceSub(slice, sub []string) []string {
+	set := make(map[string]bool, len(sub))
+	for _, v := range sub {
+		set[v] = true
+	}
+	return sliceSubSet(slice, set)
+}
+
+func sliceSubSet(slice []string, sub map[string]bool) []string {
+	var reduced []string
+	for _, v := range slice {
+		if !sub[v] {
+			reduced = append(reduced, v)
+		}
+	}
+	return reduced
+}
+
+// expandFQID returns all fqfields for an fqid.
+func expandFQID(fqid string) []string {
+	var fqfields []string
+	parts := strings.Split(fqid, "/")
+	for _, field := range collectionFields[parts[0]] {
+		fqfields = append(fqfields, fmt.Sprintf("%s/%s/%s", parts[0], parts[1], field))
+	}
+	return fqfields
+}
+
+// expandFQIDList calls expandFQID on every value in the list. Values that are
+// not an fqid are added to the output as it.
+func expandFQIDList(values []string) []string {
+	var expanded []string
+	for _, value := range values {
+		if strings.Count(value, "/") == 1 {
+			expanded = append(expanded, expandFQID(value)...)
+			continue
+		}
+		expanded = append(expanded, value)
+	}
+	return expanded
 }

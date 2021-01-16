@@ -9,7 +9,7 @@ fqids:
 
 cases:
 - name: Without perm
-  can_see:
+  can_see: []
 
 - name: With perm
   permission: assignment.can_see

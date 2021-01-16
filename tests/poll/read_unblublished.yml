@@ -11,15 +11,10 @@ cases:
 
   cases:
     - name: no perms
-      can_see:
+      can_see: []
 
     - name: can_see
       permission: agenda_item.can_see
-      can_see_at_least:
-      - poll/1/id
-      - poll/1/global_yes
-      - poll/1/global_no
-      - poll/1/global_abstain
       can_not_see:
       - poll/1/votesvalid
       - poll/1/votesinvalid
@@ -44,12 +39,10 @@ cases:
 
   cases:
     - name: no perms
-      can_see:
+      can_see: []
 
     - name: can_see
       permission: agenda_item.can_see
-      can_see_at_least:
-      - option/1/id
       can_not_see:
       - option/1/yes
       - option/1/no
@@ -78,11 +71,11 @@ cases:
 
   cases:
     - name: no perms
-      can_see:
+      can_see: []
 
     - name: no perms vote user
       user_id: 1
-      can_see:
+      can_see: []
 
     - name: can_see
       permission: agenda_item.can_see

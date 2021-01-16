@@ -48,7 +48,7 @@ fqids:
 
 cases:
 - name: no perm
-  can_see:
+  can_see: []
 
 - name: can_see
   permission: motion.can_see

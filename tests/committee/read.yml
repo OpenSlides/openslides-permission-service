@@ -5,7 +5,7 @@ fqids:
 
 cases:
 - name: unprivileged
-  can_see:
+  can_see: []
 
 - name: superuser
   db:
