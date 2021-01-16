@@ -30,7 +30,7 @@ There are two types of tests:
     that the user can not see.
 
   * `can_not_see`: A shortcut for saying `can_see` everything from `fqfields`
-    expect this once.
+    expect thes once.
 
 Both types can be combined.
 
