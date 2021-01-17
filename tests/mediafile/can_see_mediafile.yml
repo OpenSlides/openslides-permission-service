@@ -1,0 +1,49 @@
+---
+action: mediafile.can_see_mediafile
+db:
+  mediafile/1/meeting_id: 1
+
+cases:
+- name: is superadmin
+  db:
+    user/1/organisation_management_level: superuser
+  user_id: 1
+
+  is_allowed: true
+
+- name: meeting admin
+  db:
+    meeting/1/admin_group_id: 1
+  group_id: 1
+
+  is_allowed: true
+
+- name: user not in meeting
+  meeting_id: 2
+
+  is_allowed: false
+
+- name: can see
+  permission: mediafile.can_see
+
+  is_allowed: true
+
+- name: logo in meeting
+  db:
+    mediafile/1/used_as_logo_$1_in_meeting_id: 1
+
+  is_allowed: true
+
+- name: logo in meeting user not in meeting
+  db:
+    mediafile/1/used_as_logo_$1_in_meeting_id: 1
+  meeting_id: 2
+
+  is_allowed: false
+
+- name: on projector
+  db:
+    mediafile/1/current_projector_ids: [1]
+  permission: projector.can_see
+
+  is_allowed: true
