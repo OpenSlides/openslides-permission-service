@@ -109,15 +109,7 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 
 		handler, ok := ps.readHandler[name]
 		if !ok {
-
-			//------ DEVELOPMENT MODE
-			for _, k := range fqfields {
-				data[k.String()] = true
-			}
-			continue
-			// ------------
-
-			//return nil, fmt.Errorf("unknown collection: `%s`", name)
+			return nil, fmt.Errorf("unknown collection: `%s`", name)
 		}
 
 		if err := handler.RestrictFQFields(ctx, userID, fqfields, data); err != nil {
