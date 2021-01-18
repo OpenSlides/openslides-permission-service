@@ -1,0 +1,36 @@
+---
+db:
+  user/1:
+    number_$:
+    - "1"
+    - "2"
+    number_$1: foo
+    number_$2: bar
+
+fqfields:
+- user/1/number_$
+- user/1/number_$1
+- user/1/number_$2
+
+cases:
+- name: Only in one meeting
+  permission: user.can_see
+  meeting_id: 1
+
+  can_not_see:
+  - user/1/number_$2
+
+- name: In both meetings
+  db:
+    group/2:
+      permissions:
+      - user.can_see
+      meeting_id: 2
+    user/1337/group_ids: [2]
+
+  permission: user.can_see
+  meeting_id:
+  - 1
+  - 2
+
+  can_not_see: []
