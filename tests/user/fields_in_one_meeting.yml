@@ -1,6 +1,6 @@
 ---
 db:
-  user/1/group_$_ids: [1]
+  user/1/group_$_ids: ["1"]
 
 fqids:
 - user/1
@@ -96,13 +96,11 @@ cases:
     user/1337/organisation_management_level: can_manage_users
   can_not_see:
   - user/1/password
-
-  # TODO: Talk with emanuel
+  - user/1/personal_note_$_ids
   - user/1/is_present_in_meeting_ids
-  - user/1/meeting_id  # ???
+  - user/1/meeting_id
   - user/1/comment_$
   - user/1/about_me_$
-
   - user/1/group_$_ids
   - user/1/speaker_$_ids
   - user/1/supported_motion_$_ids
@@ -117,18 +115,16 @@ cases:
   - user/1/vote_delegated_$_to_id
   - user/1/vote_delegations_$_from_ids
 
-- name: Orga level user manager
+- name: Orga level manager
   db:
     user/1337/organisation_management_level: can_manage_organisation
   can_not_see:
   - user/1/password
-
-  # TODO: Talk with emanuel
+  - user/1/personal_note_$_ids
   - user/1/is_present_in_meeting_ids
-  - user/1/meeting_id  # ???
+  - user/1/meeting_id
   - user/1/comment_$
   - user/1/about_me_$
-
   - user/1/group_$_ids
   - user/1/speaker_$_ids
   - user/1/supported_motion_$_ids

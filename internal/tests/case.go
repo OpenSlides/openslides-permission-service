@@ -223,7 +223,7 @@ func (c *Case) readTestResult(t *testing.T, got map[string]bool, canSee, canNotS
 
 	for _, f := range canSee {
 		if !got[f] {
-			t.Errorf("Got field %s", f)
+			t.Errorf("Did not get field %s", f)
 		}
 	}
 
@@ -235,7 +235,7 @@ func (c *Case) readTestResult(t *testing.T, got map[string]bool, canSee, canNotS
 
 	for _, f := range canNotSee {
 		if !set[f] {
-			t.Errorf("Did not get field %s", f)
+			t.Errorf("Got field %s", f)
 		}
 	}
 }

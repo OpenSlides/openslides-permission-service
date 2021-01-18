@@ -72,6 +72,20 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 	return true, nil
 }
 
+func superUserFields(result map[string]bool, collection string, fqfields []perm.FQField) (skip bool) {
+	if collection == "personal_note" {
+		return false
+	}
+
+	for _, k := range fqfields {
+		if k.Collection == "user" && k.Field == "password" {
+			continue
+		}
+		result[k.String()] = true
+	}
+	return true
+}
+
 // RestrictFQFields tells, if the given user can see the fqfields.
 func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
 	data := make(map[string]bool, len(fqfields))
@@ -87,11 +101,10 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 	}
 
 	for name, fqfields := range grouped {
-		if superUser && name != "personal_note" {
-			for _, k := range fqfields {
-				data[k.String()] = true
+		if superUser {
+			if superUserFields(data, name, fqfields) {
+				continue
 			}
-			continue
 		}
 
 		handler, ok := ps.readHandler[name]
