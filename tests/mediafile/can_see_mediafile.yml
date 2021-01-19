@@ -73,3 +73,22 @@ cases:
   permission: projector.can_see
 
   is_allowed: true
+
+- name: on projector without perm
+  db:
+    mediafile/1/current_projector_ids: [1]
+
+  is_allowed: false
+
+- name: not on projector with perm
+  permission: projector.can_see
+
+  is_allowed: false
+
+- name: on projector, user in different meeting
+  db:
+    mediafile/1/current_projector_ids: [1]
+  permission: projector.can_see
+  meeting_id: 2
+
+  is_allowed: true
