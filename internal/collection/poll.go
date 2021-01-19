@@ -176,7 +176,17 @@ func (p *poll) canSee(ctx context.Context, perms *perm.Permission, userID int, o
 	}
 
 	if collection == "motion" {
-		return canSeeMotion(ctx, p.dp, userID, id)
+		meetingID, err := p.dp.MeetingFromModel(ctx, fmt.Sprintf("motion/%d", id))
+		if err != nil {
+			return false, fmt.Errorf("getting meetingID from motion: %w", err)
+		}
+
+		perms, err := perm.New(ctx, p.dp, userID, meetingID)
+		if err != nil {
+			return false, fmt.Errorf("getting user permissions: %w", err)
+		}
+
+		return canSeeMotion(ctx, p.dp, userID, id, perms)
 	}
 
 	perm := "agenda_item.can_see"

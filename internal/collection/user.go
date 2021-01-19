@@ -48,11 +48,6 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 
 	grouped := groupByID(fqfields)
 	for _, fqfields := range grouped {
-		var meetingIDs []string
-		if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/group_$_ids", fqfields[0].ID), &meetingIDs); err != nil {
-			return fmt.Errorf("getting meeting ids: %w", err)
-		}
-
 		seeFields := make(map[string]bool)
 
 		if orgaLevel != "" {
@@ -62,18 +57,27 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 			addSlice(seeFields, canSeeFields[4])
 		}
 
-		for _, meetingID := range meetingIDs {
-			mid, err := strconv.Atoi(meetingID)
-			if err != nil {
-				return fmt.Errorf("invalid meetingid: %s", meetingID)
-			}
+		var meetingIDsStr []string
+		if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/group_$_ids", fqfields[0].ID), &meetingIDsStr); err != nil {
+			return fmt.Errorf("getting meeting ids: %w", err)
+		}
 
-			fields, ok := meetingFields[mid]
+		meetingIDs := make([]int, len(meetingIDsStr))
+		for i, midS := range meetingIDsStr {
+			mid, err := strconv.Atoi(midS)
+			if err != nil {
+				return fmt.Errorf("invalid meetingid: %s", midS)
+			}
+			meetingIDs[i] = mid
+		}
+
+		for _, meetingID := range meetingIDs {
+			fields, ok := meetingFields[meetingID]
 			if !ok {
 				fields = make(map[string]bool)
-				perms, err := perm.New(ctx, u.dp, userID, mid)
+				perms, err := perm.New(ctx, u.dp, userID, meetingID)
 				if err != nil {
-					return fmt.Errorf("getting perms for user %d in meeting %d: %w", userID, mid, err)
+					return fmt.Errorf("getting perms for user %d in meeting %d: %w", userID, meetingID, err)
 				}
 				if perms.Has("user.can_see") {
 					addSlice(fields, canSeeFields[0])
@@ -84,10 +88,20 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 				if perms.Has("user.can_manage") {
 					addSlice(fields, canSeeFields[2])
 				}
-				meetingFields[mid] = fields
+				meetingFields[meetingID] = fields
 			}
 
 			addMap(seeFields, fields)
+		}
+
+		if len(seeFields) == 0 {
+			r, err := isRequired(ctx, u.dp, userID, fqfields[0].ID, meetingIDs)
+			if err != nil {
+				return err
+			}
+			if r {
+				addSlice(seeFields, canSeeFields[0])
+			}
 		}
 
 		for _, f := range fqfields {
@@ -104,6 +118,44 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 		}
 	}
 	return nil
+}
+
+func isRequired(ctx context.Context, dp dataprovider.DataProvider, userID int, otherUserID int, meetingIDs []int) (bool, error) {
+	var ids []int
+	for _, mid := range meetingIDs {
+		p, err := perm.New(ctx, dp, userID, mid)
+		if err != nil {
+			return false, fmt.Errorf("getting perms: %w", err)
+		}
+		if p == nil {
+			continue
+		}
+
+		// Speaker
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/speaker_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting speaker ids: %w", err)
+		}
+		if len(ids) > 0 && canSeeSpeaker(p, ids) {
+			return true, nil
+		}
+
+		// Motion Supporter
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/supported_motion_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting supporter ids: %w", err)
+		}
+		if len(ids) > 0 {
+			b, err := canSeeMotionSupporter(ctx, dp, userID, p, ids)
+			if err != nil {
+				return false, err
+			}
+			if b {
+				return true, nil
+			}
+		}
+
+	}
+	return false, nil
 }
 
 // groupByID groups a list of fqfields by there id part.
