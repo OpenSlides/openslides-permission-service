@@ -392,3 +392,21 @@ func canSeeMotionSupporter(ctx context.Context, dp dataprovider.DataProvider, us
 	}
 	return false, nil
 }
+
+func canSeeMotionSubmitter(ctx context.Context, dp dataprovider.DataProvider, userID int, p *perm.Permission, ids []int) (bool, error) {
+	for _, id := range ids {
+		var motionID int
+		if err := dp.Get(ctx, fmt.Sprintf("motion_submitter/%d/motion_id", id), &motionID); err != nil {
+			return false, fmt.Errorf("getting motion id: %w", err)
+		}
+
+		b, err := canSeeMotion(ctx, dp, userID, id, p)
+		if err != nil {
+			return false, fmt.Errorf("can see motion %d: %w", motionID, err)
+		}
+		if b {
+			return true, nil
+		}
+	}
+	return false, nil
+}

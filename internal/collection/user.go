@@ -135,7 +135,7 @@ func isRequired(ctx context.Context, dp dataprovider.DataProvider, userID int, o
 		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/speaker_$%d_ids", otherUserID, mid), &ids); err != nil {
 			return false, fmt.Errorf("getting speaker ids: %w", err)
 		}
-		if len(ids) > 0 && canSeeSpeaker(p, ids) {
+		if len(ids) > 0 && canSeeSpeaker(p) {
 			return true, nil
 		}
 
@@ -153,6 +153,80 @@ func isRequired(ctx context.Context, dp dataprovider.DataProvider, userID int, o
 				return true, nil
 			}
 		}
+
+		// Motion Submitter
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/submitted_motion_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting submitter ids: %w", err)
+		}
+		if len(ids) > 0 {
+			b, err := canSeeMotionSubmitter(ctx, dp, userID, p, ids)
+			if err != nil {
+				return false, err
+			}
+			if b {
+				return true, nil
+			}
+		}
+
+		// Poll voted
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/poll_voted_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting poll ids: %w", err)
+		}
+		if len(ids) > 0 {
+			b, err := canSeePolls(ctx, dp, p, userID, ids)
+			if err != nil {
+				return false, err
+			}
+			if b {
+				return true, nil
+			}
+		}
+
+		// Poll option
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/option_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting option ids: %w", err)
+		}
+		if len(ids) > 0 {
+			b, err := canSeePollOptions(ctx, dp, p, userID, ids)
+			if err != nil {
+				return false, err
+			}
+			if b {
+				return true, nil
+			}
+		}
+
+		// Assignment Candidate
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/assignment_candidate_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting assignment candidates ids: %w", err)
+		}
+		if len(ids) > 0 && canSeeAssignmentCandidate(p) {
+			return true, nil
+		}
+
+		// Projection
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/projection_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting projection ids: %w", err)
+		}
+		if len(ids) > 0 && canSeeProjection(p) {
+			return true, nil
+		}
+
+		// Projection
+		ids = nil
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/current_projector_$%d_ids", otherUserID, mid), &ids); err != nil {
+			return false, fmt.Errorf("getting current projector ids: %w", err)
+		}
+		if len(ids) > 0 && canSeeProjector(p) {
+			return true, nil
+		}
+
+		// TODO: vote delegation
 
 	}
 	return false, nil
