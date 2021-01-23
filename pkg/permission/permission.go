@@ -120,7 +120,7 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 }
 
 // RegisterRestricter registers a reader.
-func (ps *Permission) RegisterRestricter(name string, reader perm.ReadChecker) {
+func (ps *Permission) RegisterRestricter(name string, reader perm.RestricterChecker) {
 	if _, ok := ps.readHandler[name]; ok {
 		panic(fmt.Sprintf("Read handler with name `%s` allready exists", name))
 	}
@@ -128,7 +128,7 @@ func (ps *Permission) RegisterRestricter(name string, reader perm.ReadChecker) {
 }
 
 // RegisterAction registers a writer.
-func (ps *Permission) RegisterAction(name string, writer perm.WriteChecker) {
+func (ps *Permission) RegisterAction(name string, writer perm.ActionChecker) {
 	if _, ok := ps.writeHandler[name]; ok {
 		panic(fmt.Sprintf("Write handler with name `%s` allready exists", name))
 	}

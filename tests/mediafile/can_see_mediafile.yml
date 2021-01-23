@@ -57,7 +57,7 @@ cases:
 
 - name: logo in meeting
   db:
-    mediafile/1/used_as_logo_$1_in_meeting_id: 1
+    mediafile/1/used_as_logo_$_in_meeting_id: ["background"]
 
   is_allowed: true
 
@@ -92,4 +92,4 @@ cases:
   permission: projector.can_see
   meeting_id: 2
 
-  is_allowed: true
+  is_allowed: false
