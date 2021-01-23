@@ -325,6 +325,7 @@ var canSeeFields = [...][]string{
 		"comment_$",
 		"vote_delegated_$",
 		"vote_delegations_$",
+		"default_vote_weight",
 	},
 	{ // can_manage
 		"default_password",
@@ -351,6 +352,7 @@ var canSeeFields = [...][]string{
 		"is_active",
 		"guest_meeting_ids",
 		"default_password",
+		"default_vote_weight",
 	},
 	{ // own user
 		"id",
@@ -392,5 +394,6 @@ var canSeeFields = [...][]string{
 		"personal_note_$",
 		"committee_as_member_ids",
 		"committee_as_manager_ids",
+		"default_vote_weight",
 	},
 }
