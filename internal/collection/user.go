@@ -230,9 +230,6 @@ func isRequired(ctx context.Context, dp dataprovider.DataProvider, userID int, o
 		if len(ids) > 0 && canSeeProjector(p) {
 			return true, nil
 		}
-
-		// TODO: vote delegation
-
 	}
 	return false, nil
 }
