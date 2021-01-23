@@ -18,6 +18,7 @@ func User(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterWriteHandler("user.create", perm.WriteCheckerFunc(u.create))
 		s.RegisterWriteHandler("user.update_self", perm.WriteCheckerFunc(u.updateSelf))
 		s.RegisterWriteHandler("user.update", perm.WriteCheckerFunc(u.update))
+		s.RegisterWriteHandler("user.set_password_self", perm.WriteCheckerFunc(u.passwordSelf))
 
 		s.RegisterReadHandler("user", perm.ReadCheckerFunc(u.read))
 	}
@@ -51,6 +52,29 @@ func (u *user) update(ctx context.Context, userID int, payload map[string]json.R
 	}
 
 	return orgaLevel != "", nil
+}
+
+func (u *user) passwordSelf(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	if userID == 0 {
+		return false, nil
+	}
+
+	var meetingID int
+	if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/meeting_id", userID), &meetingID); err != nil {
+		return false, fmt.Errorf("getting meeting id: %w", err)
+	}
+
+	if meetingID == 0 {
+		// Not a temporary user.
+		return true, nil
+	}
+
+	b, err := perm.HasPerm(ctx, u.dp, userID, meetingID, "user.can_change_own_password")
+	if err != nil {
+		return false, fmt.Errorf("getting perm: %w", err)
+	}
+
+	return b, nil
 }
 
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
