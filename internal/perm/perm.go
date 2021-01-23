@@ -96,6 +96,21 @@ func (p *Permission) Has(perm string) bool {
 	return p.permissions[perm]
 }
 
+// IsAdmin returns true, if the user is a meeting admin.
+func (p *Permission) IsAdmin() bool {
+	return p.admin
+}
+
+// InGroup returns true, if the user is in the given group (by group_id).
+func (p *Permission) InGroup(gid int) bool {
+	for _, id := range p.groupIDs {
+		if id == gid {
+			return true
+		}
+	}
+	return false
+}
+
 // Create checks for the mermission to create a new object.
 func Create(dp dataprovider.DataProvider, managePerm, collection string) WriteChecker {
 	return WriteCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
