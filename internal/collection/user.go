@@ -16,6 +16,7 @@ func User(dp dataprovider.DataProvider) perm.ConnecterFunc {
 	u := &user{dp: dp}
 	return func(s perm.HandlerStore) {
 		s.RegisterWriteHandler("user.create", perm.WriteCheckerFunc(u.create))
+		s.RegisterWriteHandler("user.update_self", perm.WriteCheckerFunc(u.updateSelf))
 
 		s.RegisterReadHandler("user", perm.ReadCheckerFunc(u.read))
 	}
@@ -36,6 +37,10 @@ func (u *user) create(ctx context.Context, userID int, payload map[string]json.R
 	default:
 		return false, nil
 	}
+}
+
+func (u *user) updateSelf(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	return userID != 0, nil
 }
 
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
