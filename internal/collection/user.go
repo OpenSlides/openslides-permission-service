@@ -20,6 +20,7 @@ func User(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterWriteHandler("user.update", perm.WriteCheckerFunc(u.update))
 		s.RegisterWriteHandler("user.set_password_self", perm.WriteCheckerFunc(u.passwordSelf))
 		s.RegisterWriteHandler("user.reset_password_to_default", perm.WriteCheckerFunc(u.update))
+		s.RegisterWriteHandler("user.generate_new_password", perm.WriteCheckerFunc(u.update))
 
 		s.RegisterReadHandler("user", perm.ReadCheckerFunc(u.read))
 	}
