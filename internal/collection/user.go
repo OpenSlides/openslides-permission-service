@@ -17,6 +17,7 @@ func User(dp dataprovider.DataProvider) perm.ConnecterFunc {
 	return func(s perm.HandlerStore) {
 		s.RegisterWriteHandler("user.create", perm.WriteCheckerFunc(u.create))
 		s.RegisterWriteHandler("user.update_self", perm.WriteCheckerFunc(u.updateSelf))
+		s.RegisterWriteHandler("user.update", perm.WriteCheckerFunc(u.update))
 
 		s.RegisterReadHandler("user", perm.ReadCheckerFunc(u.read))
 	}
@@ -41,6 +42,15 @@ func (u *user) create(ctx context.Context, userID int, payload map[string]json.R
 
 func (u *user) updateSelf(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	return userID != 0, nil
+}
+
+func (u *user) update(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	var orgaLevel string
+	if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
+		return false, fmt.Errorf("getting organisation level: %w", err)
+	}
+
+	return orgaLevel != "", nil
 }
 
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
