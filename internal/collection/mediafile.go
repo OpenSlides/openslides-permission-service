@@ -15,9 +15,9 @@ func Mediafile(dp dataprovider.DataProvider) perm.ConnecterFunc {
 	m := &mediafile{dp: dp}
 
 	return func(s perm.HandlerStore) {
-		s.RegisterReadHandler("mediafile", perm.ReadCheckerFunc(m.read))
+		s.RegisterRestricter("mediafile", perm.RestricterCheckerFunc(m.read))
 
-		s.RegisterWriteHandler("mediafile.can_see_mediafile", perm.WriteCheckerFunc(m.canSeeAction))
+		s.RegisterAction("mediafile.can_see_mediafile", perm.ActionCheckerFunc(m.canSeeAction))
 	}
 }
 
@@ -93,7 +93,7 @@ func (m *mediafile) canSeeAction(ctx context.Context, userID int, payload map[st
 		}
 
 		var accessGroups []int
-		if err := m.dp.GetIfExist(ctx, fqid+"/inherited_access_group_ids", &isPublic); err != nil {
+		if err := m.dp.GetIfExist(ctx, fqid+"/inherited_access_group_ids", &accessGroups); err != nil {
 			return false, fmt.Errorf("getting inherited_access_group_ids: %w", err)
 		}
 
