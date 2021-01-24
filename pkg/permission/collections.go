@@ -23,7 +23,6 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 
 		collection.Meeting(dp),
 		collection.Committee(dp),
-		collection.Organisation(dp),
 		collection.Public(dp, "resource", "organisation"),
 
 		collection.ReadPerm(dp, "assignment.can_see", "assignment", "assignment_candidate"),
@@ -45,6 +44,15 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 			"motion_category",
 			"motion_state",
 			"motion_statute_paragraph",
+		),
+
+		collection.OrgaManager(
+			dp,
+			"resource.delete",
+			"organisation.update",
+			"committee.create",
+			"committee.update",
+			"committee.delete",
 		),
 
 		collection.WritePerm(dp, map[string]string{
