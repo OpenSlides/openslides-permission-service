@@ -8,13 +8,13 @@ import (
 
 func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 	return []perm.Connecter{
-		collection.NewAgendaItem(dp),
+		collection.AgendaItem(dp),
 		collection.ListOfSpeaker(dp),
 		collection.Assignment(dp),
 		collection.Mediafile(dp),
-		collection.NewMotion(dp),
+		collection.Motion(dp),
 		collection.Poll(dp),
-		collection.NewPersonalNote(dp),
+		collection.PersonalNote(dp),
 		collection.User(dp),
 		collection.Meeting(dp),
 		collection.Committee(dp),
