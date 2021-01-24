@@ -22,7 +22,7 @@ func NewAgendaItem(dp dataprovider.DataProvider) *AgendaItem {
 
 // Connect registers the AgendaItem.
 func (a *AgendaItem) Connect(s perm.HandlerStore) {
-	s.RegisterRestricter("agenda_item", perm.RestricterCheckerFunc(a.read))
+	s.RegisterRestricter("agenda_item", perm.CollectionFunc(a.read))
 }
 
 func (a *AgendaItem) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {

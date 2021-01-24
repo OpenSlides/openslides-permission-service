@@ -112,8 +112,8 @@ func (p *Permission) InGroup(gid int) bool {
 }
 
 // Create checks for the mermission to create a new object.
-func Create(dp dataprovider.DataProvider, managePerm, collection string) ActionChecker {
-	return ActionCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+func Create(dp dataprovider.DataProvider, managePerm, collection string) Action {
+	return ActionFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 		var meetingID int
 		if err := json.Unmarshal(payload["meeting_id"], &meetingID); err != nil {
 			return false, fmt.Errorf("no valid meeting id: %w", err)
@@ -129,8 +129,8 @@ func Create(dp dataprovider.DataProvider, managePerm, collection string) ActionC
 }
 
 // Modify checks for the permissions to alter an existing object.
-func Modify(dp dataprovider.DataProvider, managePerm, collection string) ActionChecker {
-	return ActionCheckerFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+func Modify(dp dataprovider.DataProvider, managePerm, collection string) Action {
+	return ActionFunc(func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 		id, err := modelID(payload)
 		if err != nil {
 			return false, fmt.Errorf("getting model id from payload: %w", err)

@@ -165,25 +165,25 @@ type DataProvider interface {
 
 // handlerStore saves the known actions and collections
 type handlerStore struct {
-	actions     map[string]perm.ActionChecker
-	collections map[string]perm.RestricterChecker
+	actions     map[string]perm.Action
+	collections map[string]perm.Collection
 }
 
 func newHandlerStore() *handlerStore {
 	return &handlerStore{
-		actions:     make(map[string]perm.ActionChecker),
-		collections: make(map[string]perm.RestricterChecker),
+		actions:     make(map[string]perm.Action),
+		collections: make(map[string]perm.Collection),
 	}
 }
 
-func (hs *handlerStore) RegisterRestricter(name string, collection perm.RestricterChecker) {
+func (hs *handlerStore) RegisterRestricter(name string, collection perm.Collection) {
 	if _, ok := hs.collections[name]; ok {
 		panic(fmt.Sprintf("Collection with name `%s` allready exists", name))
 	}
 	hs.collections[name] = collection
 }
 
-func (hs *handlerStore) RegisterAction(name string, action perm.ActionChecker) {
+func (hs *handlerStore) RegisterAction(name string, action perm.Action) {
 	if _, ok := hs.actions[name]; ok {
 		panic(fmt.Sprintf("Action with name `%s` allready exists", name))
 	}

@@ -29,15 +29,15 @@ func (m *Motion) Connect(s perm.HandlerStore) {
 	s.RegisterAction("motion.create", m.create())
 	s.RegisterAction("motion_submitter.create", m.submitterCreate())
 
-	s.RegisterRestricter("motion", perm.RestricterCheckerFunc(m.readMotion))
-	s.RegisterRestricter("motion_submitter", perm.RestricterCheckerFunc(m.readSubmitter))
+	s.RegisterRestricter("motion", perm.CollectionFunc(m.readMotion))
+	s.RegisterRestricter("motion_submitter", perm.CollectionFunc(m.readSubmitter))
 	s.RegisterRestricter("motion_block", m.readBlock())
 	s.RegisterRestricter("motion_change_recommendation", m.readChangeRecommendation())
-	s.RegisterRestricter("motion_comment_section", perm.RestricterCheckerFunc(m.readCommentSection))
-	s.RegisterRestricter("motion_comment", perm.RestricterCheckerFunc(m.readComment))
+	s.RegisterRestricter("motion_comment_section", perm.CollectionFunc(m.readCommentSection))
+	s.RegisterRestricter("motion_comment", perm.CollectionFunc(m.readComment))
 }
 
-func (m *Motion) create() perm.ActionCheckerFunc {
+func (m *Motion) create() perm.ActionFunc {
 	allowList := map[string]bool{
 		"title":                true,
 		"text":                 true,
@@ -95,7 +95,7 @@ func (m *Motion) create() perm.ActionCheckerFunc {
 	}
 }
 
-func (m *Motion) modify(managePerm string) perm.ActionCheckerFunc {
+func (m *Motion) modify(managePerm string) perm.ActionFunc {
 	return func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 		motionFQID := fmt.Sprintf("motion/%s", payload["id"])
 		meetingID, err := m.dp.MeetingFromModel(ctx, motionFQID)
@@ -237,7 +237,7 @@ func (m *Motion) readMotion(ctx context.Context, userID int, fqfields []perm.FQF
 	})
 }
 
-func (m *Motion) submitterCreate() perm.ActionCheckerFunc {
+func (m *Motion) submitterCreate() perm.ActionFunc {
 	return func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 		motionFQID := fmt.Sprintf("motion/%s", payload["motion_id"])
 		meetingID, err := m.dp.MeetingFromModel(ctx, motionFQID)
@@ -273,7 +273,7 @@ func (m *Motion) readSubmitter(ctx context.Context, userID int, fqfields []perm.
 	})
 }
 
-func (m *Motion) readBlock() perm.RestricterCheckerFunc {
+func (m *Motion) readBlock() perm.CollectionFunc {
 	return func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 		return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 			fqid := fmt.Sprintf("motion_block/%d", fqfield.ID)
@@ -309,7 +309,7 @@ func (m *Motion) readBlock() perm.RestricterCheckerFunc {
 	}
 }
 
-func (m *Motion) readChangeRecommendation() perm.RestricterCheckerFunc {
+func (m *Motion) readChangeRecommendation() perm.CollectionFunc {
 	return func(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 		return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 			fqid := fmt.Sprintf("motion_change_recommendation/%d", fqfield.ID)

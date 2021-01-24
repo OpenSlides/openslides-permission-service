@@ -23,9 +23,9 @@ func NewPersonalNote(dp dataprovider.DataProvider) *PersonalNote {
 
 // Connect creates the routes.
 func (p *PersonalNote) Connect(s perm.HandlerStore) {
-	s.RegisterAction("personal_note.create", perm.ActionCheckerFunc(p.create))
-	s.RegisterAction("personal_note.update", perm.ActionCheckerFunc(p.modify))
-	s.RegisterAction("personal_note.delete", perm.ActionCheckerFunc(p.modify))
+	s.RegisterAction("personal_note.create", perm.ActionFunc(p.create))
+	s.RegisterAction("personal_note.update", perm.ActionFunc(p.modify))
+	s.RegisterAction("personal_note.delete", perm.ActionFunc(p.modify))
 
 	s.RegisterRestricter("personal_note", p)
 }
