@@ -55,7 +55,26 @@ func (u *user) update(ctx context.Context, userID int, payload map[string]json.R
 		return false, fmt.Errorf("getting organisation level: %w", err)
 	}
 
-	return orgaLevel != "", nil
+	if orgaLevel != "" {
+		return true, nil
+	}
+
+	var meetingID int
+	if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%s/meeting_id", payload["id"]), &meetingID); err != nil {
+		return false, fmt.Errorf("getting meeting_id: %w", err)
+	}
+
+	if meetingID == 0 {
+		// Not a temporary user
+		return false, nil
+	}
+
+	b, err := perm.HasPerm(ctx, u.dp, userID, meetingID, "user.can_manage")
+	if err != nil {
+		return false, fmt.Errorf("checking manage perm: %w", err)
+	}
+
+	return b, nil
 }
 
 func (u *user) passwordSelf(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
