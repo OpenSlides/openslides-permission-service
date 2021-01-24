@@ -1,5 +1,7 @@
-// Package permission provides tells, if a user has the permission to see or
-// write an object.
+// Package permission handels the permissions of a user.
+//
+// It provides the Permission object with methods to tell, if a user is allowed
+// to use an action or can see some fqfields.
 package permission
 
 import (
@@ -11,7 +13,8 @@ import (
 	"github.com/OpenSlides/openslides-permission-service/internal/perm"
 )
 
-// Permission impelements the permission.Permission interface.
+// Permission provides methods to tell, if a user can use an action or can see
+// fqfields. It has to be initializes with permission.New().
 type Permission struct {
 	hs *handlerStore
 
@@ -19,6 +22,8 @@ type Permission struct {
 }
 
 // New returns a new permission service.
+//
+// It requires a permission.DataProvider to access the database.
 func New(dp DataProvider) *Permission {
 	p := &Permission{
 		hs: newHandlerStore(),
@@ -32,8 +37,13 @@ func New(dp DataProvider) *Permission {
 	return p
 }
 
-// IsAllowed tells, if something is allowed.
-func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, dataList []map[string]json.RawMessage) (bool, error) {
+// IsAllowed returns true, if the user can access the given action.
+//
+// One call to IsAllowed() handels a list of requests to this action. For each
+// entry in the payloadList the method checks, if the user is allowed to use the
+// action. The method returns true, if the user can the action for all of the
+// given payloads.
+func (ps *Permission) IsAllowed(ctx context.Context, action string, userID int, payloadList []map[string]json.RawMessage) (bool, error) {
 	superUser, err := ps.dp.IsSuperuser(ctx, userID)
 	if err != nil {
 		return false, fmt.Errorf("checking for superuser: %w", err)
@@ -43,15 +53,15 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 	}
 
 	// TODO: after all handlers are implemented. Move this code above the superUser check.
-	handler, ok := ps.hs.writeHandler[name]
+	handler, ok := ps.hs.actions[action]
 	if !ok {
-		return false, fmt.Errorf("unknown collection: `%s`", name)
+		return false, fmt.Errorf("unknown collection: `%s`", action)
 	}
 
-	for i, data := range dataList {
-		allowed, err := handler.IsAllowed(ctx, userID, data)
+	for i, payload := range payloadList {
+		allowed, err := handler.IsAllowed(ctx, userID, payload)
 		if err != nil {
-			return false, fmt.Errorf("action %d: %w", i, err)
+			return false, fmt.Errorf("payload %d: %w", i, err)
 		}
 		if !allowed {
 			return false, nil
@@ -78,9 +88,13 @@ func superUserFields(result map[string]bool, collection string, fqfields []perm.
 	return true
 }
 
-// RestrictFQFields tells, if the given user can see the fqfields.
+// RestrictFQFields filters a list of fqfields and returns the fields, that the
+// user can see.
+//
+// The return value is a set of fqfields. It can only contain fields, that where
+// requested.
 func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields []string) (map[string]bool, error) {
-	data := make(map[string]bool, len(fqfields))
+	allowedFields := make(map[string]bool, len(fqfields))
 
 	superUser, err := ps.dp.IsSuperuser(ctx, userID)
 	if err != nil {
@@ -94,23 +108,24 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 
 	for name, fqfields := range grouped {
 		if superUser {
-			if superUserFields(data, name, fqfields) {
+			if superUserFields(allowedFields, name, fqfields) {
 				continue
 			}
 		}
 
-		handler, ok := ps.hs.readHandler[name]
+		handler, ok := ps.hs.collections[name]
 		if !ok {
 			return nil, fmt.Errorf("unknown collection: `%s`", name)
 		}
 
-		if err := handler.RestrictFQFields(ctx, userID, fqfields, data); err != nil {
+		if err := handler.RestrictFQFields(ctx, userID, fqfields, allowedFields); err != nil {
 			return nil, fmt.Errorf("restrict for collection %s: %w", name, err)
 		}
 	}
-	return data, nil
+	return allowedFields, nil
 }
 
+// groupFQFields sorts the fqfields and returns it grouped by collection.
 func groupFQFields(fqfields []string) (map[string][]perm.FQField, error) {
 	grouped := make(map[string][]perm.FQField)
 	for _, f := range fqfields {
@@ -123,15 +138,15 @@ func groupFQFields(fqfields []string) (map[string][]perm.FQField, error) {
 	return grouped, nil
 }
 
-// AllRoutes returns the names of all read and write routes.
-func (ps *Permission) AllRoutes() (readRoutes []string, writeRoutes []string) {
-	rr := make([]string, 0, len(ps.hs.readHandler))
-	for k := range ps.hs.readHandler {
+// AllRoutes returns the names of all known actions and collections.
+func (ps *Permission) AllRoutes() (collections []string, actions []string) {
+	rr := make([]string, 0, len(ps.hs.collections))
+	for k := range ps.hs.collections {
 		rr = append(rr, k)
 	}
 
-	wr := make([]string, 0, len(ps.hs.writeHandler))
-	for k := range ps.hs.writeHandler {
+	wr := make([]string, 0, len(ps.hs.actions))
+	for k := range ps.hs.actions {
 		wr = append(wr, k)
 	}
 	return rr, wr
@@ -140,32 +155,37 @@ func (ps *Permission) AllRoutes() (readRoutes []string, writeRoutes []string) {
 // DataProvider is the connection to the datastore. It returns the data
 // required by the permission service.
 type DataProvider interface {
-	// If a field does not exist, it is not returned.
+	// Get returns the values for the given fqfields.
+	//
+	// The number of return values have to be the same then the number of
+	// requested fields. If a field does not exist, nil is returned for this
+	// value.
 	Get(ctx context.Context, fqfields ...string) ([]json.RawMessage, error)
 }
 
+// handlerStore saves the known actions and collections
 type handlerStore struct {
-	writeHandler map[string]perm.ActionChecker
-	readHandler  map[string]perm.RestricterChecker
+	actions     map[string]perm.ActionChecker
+	collections map[string]perm.RestricterChecker
 }
 
 func newHandlerStore() *handlerStore {
 	return &handlerStore{
-		writeHandler: make(map[string]perm.ActionChecker),
-		readHandler:  make(map[string]perm.RestricterChecker),
+		actions:     make(map[string]perm.ActionChecker),
+		collections: make(map[string]perm.RestricterChecker),
 	}
 }
 
-func (hs *handlerStore) RegisterRestricter(name string, reader perm.RestricterChecker) {
-	if _, ok := hs.readHandler[name]; ok {
-		panic(fmt.Sprintf("Read handler with name `%s` allready exists", name))
+func (hs *handlerStore) RegisterRestricter(name string, collection perm.RestricterChecker) {
+	if _, ok := hs.collections[name]; ok {
+		panic(fmt.Sprintf("Collection with name `%s` allready exists", name))
 	}
-	hs.readHandler[name] = reader
+	hs.collections[name] = collection
 }
 
-func (hs *handlerStore) RegisterAction(name string, writer perm.ActionChecker) {
-	if _, ok := hs.writeHandler[name]; ok {
-		panic(fmt.Sprintf("Write handler with name `%s` allready exists", name))
+func (hs *handlerStore) RegisterAction(name string, action perm.ActionChecker) {
+	if _, ok := hs.actions[name]; ok {
+		panic(fmt.Sprintf("Action with name `%s` allready exists", name))
 	}
-	hs.writeHandler[name] = writer
+	hs.actions[name] = action
 }
