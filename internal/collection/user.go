@@ -100,10 +100,37 @@ func (u *user) passwordSelf(ctx context.Context, userID int, payload map[string]
 	return b, nil
 }
 
+// committeeManagerMembers returns all userIDs as a set that the userID can
+// manage as committee manager. (Member in a meeting from a committe the userID
+// is manager.)
+func committeeManagerMembers(ctx context.Context, dp dataprovider.DataProvider, userID int) (map[int]bool, error) {
+	var committeManager []int
+	if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/committee_as_manager_ids", userID), &committeManager); err != nil {
+		return nil, fmt.Errorf("getting committee manager: %w", err)
+	}
+
+	members := make(map[int]bool)
+	for _, id := range committeManager {
+		var membersIDs []int
+		if err := dp.GetIfExist(ctx, fmt.Sprintf("committee/%d/member_ids", id), &membersIDs); err != nil {
+			return nil, fmt.Errorf("getting members: %w", err)
+		}
+		for _, id := range membersIDs {
+			members[id] = true
+		}
+	}
+	return members, nil
+}
+
 func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
 	var orgaLevel string
 	if err := u.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
 		return fmt.Errorf("getting organisation level: %w", err)
+	}
+
+	committeeManagerMembers, err := committeeManagerMembers(ctx, u.dp, userID)
+	if err != nil {
+		return fmt.Errorf("getting members of committee: %w", err)
 	}
 
 	meetingFields := make(map[int]map[string]bool)
@@ -117,6 +144,9 @@ func (u *user) read(ctx context.Context, userID int, fqfields []perm.FQField, re
 		}
 		if fqfields[0].ID == userID {
 			addSlice(seeFields, canSeeFields[4])
+		}
+		if committeeManagerMembers[fqfields[0].ID] {
+			addSlice(seeFields, canSeeFields[5])
 		}
 
 		var meetingIDsStr []string
@@ -453,5 +483,21 @@ var canSeeFields = [...][]string{
 		"committee_as_member_ids",
 		"committee_as_manager_ids",
 		"default_vote_weight",
+	},
+	{ // Committee manager
+		"id",
+		"username",
+		"title",
+		"first_name",
+		"last_name",
+		"is_active",
+		"is_physical_person",
+		"gender",
+		"email",
+		"last_email_send",
+		"is_demo_user",
+		"organisation_management_level",
+		"committee_as_member_ids",
+		"committee_as_manager_ids",
 	},
 }
