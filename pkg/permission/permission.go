@@ -13,31 +13,20 @@ import (
 
 // Permission impelements the permission.Permission interface.
 type Permission struct {
-	connecters   []perm.Connecter
-	writeHandler map[string]perm.ActionChecker
-	readHandler  map[string]perm.RestricterChecker
+	hs *handlerStore
 
 	dp dataprovider.DataProvider
 }
 
 // New returns a new permission service.
-func New(dp DataProvider, os ...Option) *Permission {
+func New(dp DataProvider) *Permission {
 	p := &Permission{
-		writeHandler: make(map[string]perm.ActionChecker),
-		readHandler:  make(map[string]perm.RestricterChecker),
-		dp:           dataprovider.DataProvider{External: dp},
+		hs: newHandlerStore(),
+		dp: dataprovider.DataProvider{External: dp},
 	}
 
-	for _, o := range os {
-		o(p)
-	}
-
-	if p.connecters == nil {
-		p.connecters = openSlidesCollections(p.dp)
-	}
-
-	for _, con := range p.connecters {
-		con.Connect(p)
+	for _, con := range openSlidesCollections(p.dp) {
+		con.Connect(p.hs)
 	}
 
 	return p
@@ -54,7 +43,7 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 	}
 
 	// TODO: after all handlers are implemented. Move this code above the superUser check.
-	handler, ok := ps.writeHandler[name]
+	handler, ok := ps.hs.writeHandler[name]
 	if !ok {
 		return false, fmt.Errorf("unknown collection: `%s`", name)
 	}
@@ -72,6 +61,9 @@ func (ps *Permission) IsAllowed(ctx context.Context, name string, userID int, da
 	return true, nil
 }
 
+// superUserFields handles fields that the superuser is not allowed to see.
+//
+// Returns true, if the normal normal restricters should be skiped.
 func superUserFields(result map[string]bool, collection string, fqfields []perm.FQField) (skip bool) {
 	if collection == "personal_note" {
 		return false
@@ -107,7 +99,7 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 			}
 		}
 
-		handler, ok := ps.readHandler[name]
+		handler, ok := ps.hs.readHandler[name]
 		if !ok {
 			return nil, fmt.Errorf("unknown collection: `%s`", name)
 		}
@@ -117,22 +109,6 @@ func (ps Permission) RestrictFQFields(ctx context.Context, userID int, fqfields 
 		}
 	}
 	return data, nil
-}
-
-// RegisterRestricter registers a reader.
-func (ps *Permission) RegisterRestricter(name string, reader perm.RestricterChecker) {
-	if _, ok := ps.readHandler[name]; ok {
-		panic(fmt.Sprintf("Read handler with name `%s` allready exists", name))
-	}
-	ps.readHandler[name] = reader
-}
-
-// RegisterAction registers a writer.
-func (ps *Permission) RegisterAction(name string, writer perm.ActionChecker) {
-	if _, ok := ps.writeHandler[name]; ok {
-		panic(fmt.Sprintf("Write handler with name `%s` allready exists", name))
-	}
-	ps.writeHandler[name] = writer
 }
 
 func groupFQFields(fqfields []string) (map[string][]perm.FQField, error) {
@@ -149,13 +125,47 @@ func groupFQFields(fqfields []string) (map[string][]perm.FQField, error) {
 
 // AllRoutes returns the names of all read and write routes.
 func (ps *Permission) AllRoutes() (readRoutes []string, writeRoutes []string) {
-	rr := make([]string, 0, len(ps.readHandler))
-	for k := range ps.readHandler {
+	rr := make([]string, 0, len(ps.hs.readHandler))
+	for k := range ps.hs.readHandler {
 		rr = append(rr, k)
 	}
-	wr := make([]string, 0, len(ps.writeHandler))
-	for k := range ps.writeHandler {
+
+	wr := make([]string, 0, len(ps.hs.writeHandler))
+	for k := range ps.hs.writeHandler {
 		wr = append(wr, k)
 	}
 	return rr, wr
+}
+
+// DataProvider is the connection to the datastore. It returns the data
+// required by the permission service.
+type DataProvider interface {
+	// If a field does not exist, it is not returned.
+	Get(ctx context.Context, fqfields ...string) ([]json.RawMessage, error)
+}
+
+type handlerStore struct {
+	writeHandler map[string]perm.ActionChecker
+	readHandler  map[string]perm.RestricterChecker
+}
+
+func newHandlerStore() *handlerStore {
+	return &handlerStore{
+		writeHandler: make(map[string]perm.ActionChecker),
+		readHandler:  make(map[string]perm.RestricterChecker),
+	}
+}
+
+func (hs *handlerStore) RegisterRestricter(name string, reader perm.RestricterChecker) {
+	if _, ok := hs.readHandler[name]; ok {
+		panic(fmt.Sprintf("Read handler with name `%s` allready exists", name))
+	}
+	hs.readHandler[name] = reader
+}
+
+func (hs *handlerStore) RegisterAction(name string, writer perm.ActionChecker) {
+	if _, ok := hs.writeHandler[name]; ok {
+		panic(fmt.Sprintf("Write handler with name `%s` allready exists", name))
+	}
+	hs.writeHandler[name] = writer
 }
