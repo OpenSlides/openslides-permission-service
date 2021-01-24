@@ -50,7 +50,7 @@ func New(ctx context.Context, dp dataprovider.DataProvider, userID, meetingID in
 			return nil, nil
 		}
 
-		// Get superadmin_group_id.
+		// Get admin_group_id.
 		var adminGroupID int
 		fqfield := fmt.Sprintf("meeting/%d/admin_group_id", meetingID)
 		if err := dp.GetIfExist(ctx, fqfield, &adminGroupID); err != nil {

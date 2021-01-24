@@ -91,7 +91,7 @@ func (dp *DataProvider) DoesModelExists(ctx context.Context, fqid string) (bool,
 
 // IsSuperuser returns true, if the user is in the superuser group.
 func (dp *DataProvider) IsSuperuser(ctx context.Context, userID int) (bool, error) {
-	// The anonymous is never a superadmin.
+	// The anonymous is never a superuser.
 	if userID == 0 {
 		return false, nil
 	}
