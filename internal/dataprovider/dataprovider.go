@@ -65,7 +65,7 @@ func (dp *DataProvider) IsSuperuser(ctx context.Context, userID int) (bool, erro
 	if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
 		return false, fmt.Errorf("getting organisation level: %w", err)
 	}
-	return orgaLevel == "superuser", nil
+	return orgaLevel == "superadmin", nil
 }
 
 // MeetingIDFromPayload returns the id of a meeting from the payload.
