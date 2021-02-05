@@ -53,3 +53,8 @@ cases:
   - meeting/1/welcome_text
   - meeting/1/conference_stream_url
   - meeting/1/conference_stream_poster_url
+
+- name: can manage config
+  permission: meeting.can_manage_settings
+  can_see:
+  - meeting/1

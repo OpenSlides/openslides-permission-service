@@ -56,6 +56,11 @@ func (m *meeting) read(ctx context.Context, userID int, fqfields []perm.FQField,
 				return fmt.Errorf("getting perms: %w", err)
 			}
 		}
+
+		if perms.Has("meeting.can_manage_settings") {
+			result[fqfield.String()] = true
+		}
+
 		switch fqfield.Field {
 		case "enable_anonymous", "id":
 		case "welcome_title", "welcome_text":
