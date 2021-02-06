@@ -21,6 +21,7 @@ func Motion(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterAction("motion.update", m.modify(perm.MotionCanManage))
 		s.RegisterAction("motion_comment.delete", perm.ActionFunc(m.commentModify))
 		s.RegisterAction("motion_comment.update", perm.ActionFunc(m.commentModify))
+		s.RegisterAction("motion_comment.create", perm.ActionFunc(m.commentCreate))
 
 		s.RegisterRestricter("motion", perm.CollectionFunc(m.readMotion))
 		s.RegisterRestricter("motion_submitter", perm.CollectionFunc(m.readSubmitter))
@@ -411,12 +412,7 @@ func (m *motion) readCommentSection(ctx context.Context, userID int, fqfields []
 	})
 }
 
-func (m *motion) commentModify(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
-	var sectionID int
-	if err := m.dp.Get(ctx, fmt.Sprintf("motion_comment/%s/section_id", payload["id"]), &sectionID); err != nil {
-		return false, fmt.Errorf("getting section id: %w", err)
-	}
-
+func (m *motion) commentAction(ctx context.Context, userID int, sectionID int) (bool, error) {
 	fqid := "motion_comment_section/" + strconv.Itoa(sectionID)
 	meetingID, err := m.dp.MeetingFromModel(ctx, fqid)
 	if err != nil {
@@ -456,6 +452,24 @@ func (m *motion) commentModify(ctx context.Context, userID int, payload map[stri
 	}
 
 	return inGroup, nil
+}
+
+func (m *motion) commentModify(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	var sectionID int
+	if err := m.dp.Get(ctx, fmt.Sprintf("motion_comment/%s/section_id", payload["id"]), &sectionID); err != nil {
+		return false, fmt.Errorf("getting section id: %w", err)
+	}
+
+	return m.commentAction(ctx, userID, sectionID)
+}
+
+func (m *motion) commentCreate(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	sectionID, err := strconv.Atoi(string(payload["section_id"]))
+	if err != nil {
+		return false, fmt.Errorf("invalid section_id: %s", payload["section_id"])
+	}
+
+	return m.commentAction(ctx, userID, sectionID)
 }
 
 func (m *motion) readComment(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {
