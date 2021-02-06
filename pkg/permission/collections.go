@@ -78,6 +78,7 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 			"meeting.set_logo":                         perm.MeetingCanManageLogosAndFonts,
 			"meeting.unset_font":                       perm.MeetingCanManageLogosAndFonts,
 			"meeting.unset_logo":                       perm.MeetingCanManageLogosAndFonts,
+			"motion.update_metadata":                   perm.MotionCanManageMetadata,
 			"motion.follow_recommendation":             perm.MotionCanManageMetadata,
 			"motion.reset_recommendation":              perm.MotionCanManageMetadata,
 			"motion.reset_state":                       perm.MotionCanManageMetadata,
