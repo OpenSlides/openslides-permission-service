@@ -19,6 +19,7 @@ func Motion(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterAction("motion.create", m.create())
 		s.RegisterAction("motion_submitter.create", m.submitterCreate())
 		s.RegisterAction("motion.update", m.modify(perm.MotionCanManage))
+		s.RegisterAction("motion_comment.delete", perm.ActionFunc(m.commentDelete))
 
 		s.RegisterRestricter("motion", perm.CollectionFunc(m.readMotion))
 		s.RegisterRestricter("motion_submitter", perm.CollectionFunc(m.readSubmitter))
@@ -407,6 +408,53 @@ func (m *motion) readCommentSection(ctx context.Context, userID int, fqfields []
 	return perm.AllFields(fqfields, result, func(fqfield perm.FQField) (bool, error) {
 		return m.canSeeCommentSection(ctx, userID, fqfield.ID)
 	})
+}
+
+func (m *motion) commentDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	var sectionID int
+	if err := m.dp.Get(ctx, fmt.Sprintf("motion_comment/%s/section_id", payload["id"]), &sectionID); err != nil {
+		return false, fmt.Errorf("getting section id: %w", err)
+	}
+
+	fqid := "motion_comment_section/" + strconv.Itoa(sectionID)
+	meetingID, err := m.dp.MeetingFromModel(ctx, fqid)
+	if err != nil {
+		return false, fmt.Errorf("getting meetingID from model %s: %w", fqid, err)
+	}
+
+	perms, err := perm.New(ctx, m.dp, userID, meetingID)
+	if err != nil {
+		return false, fmt.Errorf("getting perms: %w", err)
+	}
+
+	var readGroupIDs []int
+	if err := m.dp.GetIfExist(ctx, fqid+"/read_group_ids", &readGroupIDs); err != nil {
+		return false, fmt.Errorf("getting read groups: %w", err)
+	}
+
+	var inGroup bool
+	for _, gid := range readGroupIDs {
+		if perms.InGroup(gid) {
+			inGroup = true
+		}
+	}
+	if !inGroup {
+		return false, nil
+	}
+
+	var writeGroupIDs []int
+	if err := m.dp.GetIfExist(ctx, fqid+"/write_group_ids", &writeGroupIDs); err != nil {
+		return false, fmt.Errorf("getting write groups: %w", err)
+	}
+
+	inGroup = false
+	for _, gid := range writeGroupIDs {
+		if perms.InGroup(gid) {
+			inGroup = true
+		}
+	}
+
+	return inGroup, nil
 }
 
 func (m *motion) readComment(ctx context.Context, userID int, fqfields []perm.FQField, result map[string]bool) error {

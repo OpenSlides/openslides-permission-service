@@ -55,7 +55,7 @@ func (ps *Permission) IsAllowed(ctx context.Context, action string, userID int, 
 	// TODO: after all handlers are implemented. Move this code above the superadmin check.
 	handler, ok := ps.hs.actions[action]
 	if !ok {
-		return false, fmt.Errorf("unknown collection: `%s`", action)
+		return false, fmt.Errorf("unknown action: `%s`", action)
 	}
 
 	for i, payload := range payloadList {
