@@ -22,6 +22,7 @@ func User(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterAction("user.reset_password_to_default", perm.ActionFunc(u.update))
 		s.RegisterAction("user.generate_new_password", perm.ActionFunc(u.update))
 		s.RegisterAction("user.set_password", perm.ActionFunc(u.update))
+		s.RegisterAction("user.set_password_temporary", perm.ActionFunc(u.update))
 		s.RegisterAction("user.delete", perm.ActionFunc(u.update))
 
 		s.RegisterRestricter("user", perm.CollectionFunc(u.read))
