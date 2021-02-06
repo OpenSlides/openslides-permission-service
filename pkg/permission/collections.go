@@ -60,7 +60,6 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 			"assignment.create":                        perm.AssignmentCanManage,
 			"assignment.delete":                        perm.AssignmentCanManage,
 			"assignment.update":                        perm.AssignmentCanManage,
-			"assignment.sort":                          perm.AssignmentCanManage,
 			"group.create":                             perm.UserCanManage,
 			"group.delete":                             perm.UserCanManage,
 			"group.set_permission":                     perm.UserCanManage,
