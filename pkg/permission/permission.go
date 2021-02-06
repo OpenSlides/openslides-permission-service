@@ -152,6 +152,11 @@ func (ps *Permission) AllRoutes() (collections []string, actions []string) {
 	return rr, wr
 }
 
+// AdditionalUpdate TODO
+func (ps *Permission) AdditionalUpdate(ctx context.Context, updated map[string]json.RawMessage) ([]int, error) {
+	return nil, nil
+}
+
 // DataProvider is the connection to the datastore. It returns the data
 // required by the permission service.
 type DataProvider interface {
