@@ -19,7 +19,8 @@ func Motion(dp dataprovider.DataProvider) perm.ConnecterFunc {
 		s.RegisterAction("motion.create", m.create())
 		s.RegisterAction("motion_submitter.create", m.submitterCreate())
 		s.RegisterAction("motion.update", m.modify(perm.MotionCanManage))
-		s.RegisterAction("motion_comment.delete", perm.ActionFunc(m.commentDelete))
+		s.RegisterAction("motion_comment.delete", perm.ActionFunc(m.commentModify))
+		s.RegisterAction("motion_comment.update", perm.ActionFunc(m.commentModify))
 
 		s.RegisterRestricter("motion", perm.CollectionFunc(m.readMotion))
 		s.RegisterRestricter("motion_submitter", perm.CollectionFunc(m.readSubmitter))
@@ -410,7 +411,7 @@ func (m *motion) readCommentSection(ctx context.Context, userID int, fqfields []
 	})
 }
 
-func (m *motion) commentDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+func (m *motion) commentModify(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	var sectionID int
 	if err := m.dp.Get(ctx, fmt.Sprintf("motion_comment/%s/section_id", payload["id"]), &sectionID); err != nil {
 		return false, fmt.Errorf("getting section id: %w", err)
