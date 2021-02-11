@@ -424,34 +424,24 @@ func (m *motion) commentAction(ctx context.Context, userID int, sectionID int) (
 		return false, fmt.Errorf("getting perms: %w", err)
 	}
 
-	var readGroupIDs []int
-	if err := m.dp.GetIfExist(ctx, fqid+"/read_group_ids", &readGroupIDs); err != nil {
-		return false, fmt.Errorf("getting read groups: %w", err)
-	}
+	for _, field := range []string{"/read_group_ids", "write_group_ids"} {
+		var groupIDs []int
+		if err := m.dp.GetIfExist(ctx, fqid+field, &groupIDs); err != nil {
+			return false, fmt.Errorf("getting groups from %s: %w", field, err)
+		}
 
-	var inGroup bool
-	for _, gid := range readGroupIDs {
-		if perms.InGroup(gid) {
-			inGroup = true
+		var inGroup bool
+		for _, gid := range groupIDs {
+			if perms.InGroup(gid) {
+				inGroup = true
+			}
+		}
+
+		if !inGroup {
+			return false, nil
 		}
 	}
-	if !inGroup {
-		return false, nil
-	}
-
-	var writeGroupIDs []int
-	if err := m.dp.GetIfExist(ctx, fqid+"/write_group_ids", &writeGroupIDs); err != nil {
-		return false, fmt.Errorf("getting write groups: %w", err)
-	}
-
-	inGroup = false
-	for _, gid := range writeGroupIDs {
-		if perms.InGroup(gid) {
-			inGroup = true
-		}
-	}
-
-	return inGroup, nil
+	return true, nil
 }
 
 func (m *motion) commentModify(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {

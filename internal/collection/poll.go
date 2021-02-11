@@ -122,12 +122,7 @@ func (p *poll) fields(fqfields []perm.FQField, result map[string]bool, restricte
 	return nil
 }
 
-func (p *poll) pollDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
-	var pollID int
-	if err := json.Unmarshal(payload["id"], &pollID); err != nil {
-		return false, fmt.Errorf("no id in payload: %v", err)
-	}
-
+func (p *poll) pollDeleteWithID(ctx context.Context, userID int, pollID int) (bool, error) {
 	fqid := "poll/" + strconv.Itoa(pollID)
 	meetingID, err := p.dp.MeetingFromModel(ctx, fqid)
 	if err != nil {
@@ -143,6 +138,15 @@ func (p *poll) pollDelete(ctx context.Context, userID int, payload map[string]js
 	return perm.HasPerm(ctx, p.dp, userID, meetingID, requiredPerm)
 }
 
+func (p *poll) pollDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
+	var pollID int
+	if err := json.Unmarshal(payload["id"], &pollID); err != nil {
+		return false, fmt.Errorf("no id in payload: %v", err)
+	}
+
+	return p.pollDeleteWithID(ctx, userID, pollID)
+}
+
 func (p *poll) optionDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 	var optionID int
 	if err := json.Unmarshal(payload["id"], &optionID); err != nil {
@@ -154,19 +158,7 @@ func (p *poll) optionDelete(ctx context.Context, userID int, payload map[string]
 		return false, fmt.Errorf("getting poll id: %w", err)
 	}
 
-	fqid := "poll/" + strconv.Itoa(pollID)
-	meetingID, err := p.dp.MeetingFromModel(ctx, fqid)
-	if err != nil {
-		return false, fmt.Errorf("getting meeting id from %s: %w", fqid, err)
-	}
-
-	var contentObjectID string
-	if err := p.dp.GetIfExist(ctx, fqid+"/content_object_id", &contentObjectID); err != nil {
-		return false, fmt.Errorf("getting content object id: %w", err)
-	}
-	collection := strings.Split(contentObjectID, "/")[0]
-	requiredPerm := p.canManage(collection)
-	return perm.HasPerm(ctx, p.dp, userID, meetingID, requiredPerm)
+	return p.pollDeleteWithID(ctx, userID, pollID)
 }
 
 func (p *poll) voteDelete(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
@@ -185,19 +177,7 @@ func (p *poll) voteDelete(ctx context.Context, userID int, payload map[string]js
 		return false, fmt.Errorf("getting poll id: %w", err)
 	}
 
-	fqid := "poll/" + strconv.Itoa(pollID)
-	meetingID, err := p.dp.MeetingFromModel(ctx, fqid)
-	if err != nil {
-		return false, fmt.Errorf("getting meeting id from %s: %w", fqid, err)
-	}
-
-	var contentObjectID string
-	if err := p.dp.GetIfExist(ctx, fqid+"/content_object_id", &contentObjectID); err != nil {
-		return false, fmt.Errorf("getting content object id: %w", err)
-	}
-	collection := strings.Split(contentObjectID, "/")[0]
-	requiredPerm := p.canManage(collection)
-	return perm.HasPerm(ctx, p.dp, userID, meetingID, requiredPerm)
+	return p.pollDeleteWithID(ctx, userID, pollID)
 }
 
 // pollPerm tells, if the user can see a poll.
