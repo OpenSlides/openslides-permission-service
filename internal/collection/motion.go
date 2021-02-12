@@ -424,6 +424,10 @@ func (m *motion) commentAction(ctx context.Context, userID int, sectionID int) (
 		return false, fmt.Errorf("getting perms: %w", err)
 	}
 
+	if perms.Has(perm.MotionCanManage) {
+		return true, nil
+	}
+
 	for _, field := range []string{"/read_group_ids", "/write_group_ids"} {
 		var groupIDs []int
 		if err := m.dp.GetIfExist(ctx, fqid+field, &groupIDs); err != nil {

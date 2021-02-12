@@ -14,7 +14,7 @@ cases:
 
 - name: Motion manager
   permission: motion.can_manage
-  is_allowed: false
+  is_allowed: true
 
 - name: Only in read group
   user_id: 1
