@@ -61,7 +61,11 @@ func (ps *Permission) IsAllowed(ctx context.Context, action string, userID int, 
 	for i, payload := range payloadList {
 		allowed, err := handler.IsAllowed(ctx, userID, payload)
 		if err != nil {
-			return false, fmt.Errorf("payload %d: %w", i, err)
+			bs, err := json.Marshal(payload)
+			if err != nil {
+				bs = []byte("[payload can not be encoded]")
+			}
+			return false, fmt.Errorf("action: %s, payload-index %d: `%s`: %w", action, i, bs, err)
 		}
 		if !allowed {
 			return false, nil
