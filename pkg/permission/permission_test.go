@@ -54,4 +54,9 @@ func TestErrorMessage(t *testing.T) {
 	if !strings.Contains(err.Error(), `{"id":1}`) {
 		t.Errorf("Error does not contain payload: %v", err)
 	}
+
+	// Check original error.
+	if !strings.Contains(err.Error(), `original error message`) {
+		t.Errorf("Error does not contain original error: %v", err)
+	}
 }

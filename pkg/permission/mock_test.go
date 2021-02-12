@@ -31,7 +31,7 @@ type collectionMock struct{}
 func (c collectionMock) Connect(s perm.HandlerStore) {
 	s.RegisterAction("dummy_allowed", allowedMock(true))
 	s.RegisterAction("dummy_not_allowed", allowedMock(false))
-	s.RegisterAction("dummy_error", allowErrorMock{errors.New("some error message")})
+	s.RegisterAction("dummy_error", allowErrorMock{errors.New("original error message")})
 
 	s.RegisterRestricter("dummy", allowedMock(false))
 }
