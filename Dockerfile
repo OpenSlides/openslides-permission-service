@@ -1,4 +1,4 @@
-FROM golang:1.16.2-alpine3.12 as basis
+FROM golang:1.16.3-alpine3.12 as basis
 LABEL maintainer="OpenSlides Team <info@openslides.com>"
 WORKDIR /app/
 
@@ -38,7 +38,7 @@ CMD CompileDaemon -log-prefix=false -build="go build ./cmd/permission" -command=
 
 
 # Productive build
-FROM alpine:3.13.2
+FROM alpine:3.13.5
 WORKDIR /app/
 
 COPY --from=builder /app/permission .
