@@ -130,11 +130,11 @@ func OrgaManager(dp dataprovider.DataProvider, actions ...string) perm.Connecter
 			s.RegisterAction(action, perm.ActionFunc(
 				func(ctx context.Context, userID int, payload map[string]json.RawMessage) (bool, error) {
 					var orgaLevel string
-					if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
-						return false, fmt.Errorf("getting organisation level: %w", err)
+					if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organization_management_level", userID), &orgaLevel); err != nil {
+						return false, fmt.Errorf("getting organization level: %w", err)
 					}
 
-					if orgaLevel == "can_manage_organisation" {
+					if orgaLevel == "can_manage_organization" {
 						return true, nil
 					}
 					return false, nil

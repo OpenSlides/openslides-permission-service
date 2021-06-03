@@ -1,6 +1,6 @@
 ---
 db:
-  user/1/organisation_management_level: can_manage_organisation
+  user/1/organization_management_level: can_manage_organization
 
 cases:
 - name: create

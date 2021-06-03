@@ -19,7 +19,7 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 		collection.Meeting(dp),
 		collection.Committee(dp),
 
-		collection.Public(dp, "resource", "organisation"),
+		collection.Public(dp, "resource", "organization"),
 		collection.ReadInMeeting(dp, "tag", "group"),
 		collection.ReadPerm(dp, perm.AssignmentCanSee, "assignment", "assignment_candidate"),
 		collection.ReadPerm(dp, perm.AgendaItemCanSee, "topic"),
@@ -44,7 +44,7 @@ func openSlidesCollections(dp dataprovider.DataProvider) []perm.Connecter {
 		collection.OrgaManager(
 			dp,
 			"resource.delete",
-			"organisation.update",
+			"organization.update",
 			"committee.create",
 			"committee.update",
 			"committee.delete",

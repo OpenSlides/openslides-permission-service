@@ -1,5 +1,5 @@
 ---
-action: organisation.update
+action: organization.update
 
 cases:
 - name: without perm
@@ -7,5 +7,5 @@ cases:
 
 - name: orga manager
   db:
-    user/1337/organisation_management_level: can_manage_organisation
+    user/1337/organization_management_level: can_manage_organization
   is_allowed: true

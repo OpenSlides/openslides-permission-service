@@ -27,11 +27,11 @@ func (c *committee) read(ctx context.Context, userID int, fqfields []perm.FQFiel
 			return false, nil
 		}
 
-		if err := c.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
-			return false, fmt.Errorf("getting organisation level: %w", err)
+		if err := c.dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organization_management_level", userID), &orgaLevel); err != nil {
+			return false, fmt.Errorf("getting organization level: %w", err)
 		}
 
-		if orgaLevel == "can_manage_organisation" {
+		if orgaLevel == "can_manage_organization" {
 			return true, nil
 		}
 

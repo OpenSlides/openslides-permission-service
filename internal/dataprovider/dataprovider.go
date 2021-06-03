@@ -62,8 +62,8 @@ func (dp *DataProvider) IsSuperadmin(ctx context.Context, userID int) (bool, err
 	}
 
 	var orgaLevel string
-	if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organisation_management_level", userID), &orgaLevel); err != nil {
-		return false, fmt.Errorf("getting organisation level: %w", err)
+	if err := dp.GetIfExist(ctx, fmt.Sprintf("user/%d/organization_management_level", userID), &orgaLevel); err != nil {
+		return false, fmt.Errorf("getting organization level: %w", err)
 	}
 	return orgaLevel == "superadmin", nil
 }

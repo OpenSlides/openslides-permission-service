@@ -8,7 +8,7 @@ payload:
 cases:
 - name: is superadmin
   db:
-    user/1/organisation_management_level: superadmin
+    user/1/organization_management_level: superadmin
   user_id: 1
 
   is_allowed: true
