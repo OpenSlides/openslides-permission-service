@@ -1,5 +1,8 @@
 # Permission Service
 
+This Repository is depricated. The code was moved into
+The autoupdate repository. The service is not used anymore.
+
 The permisson service is a service and a libary for OpenSlides4 that tells, if a
 user can see specific content.
 
